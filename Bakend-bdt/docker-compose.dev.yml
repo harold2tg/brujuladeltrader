@@ -1,0 +1,106 @@
+version: "3.9"
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.dev
+    container_name: brujula_api_dev
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/app
+      - /app/.venv
+    env_file:
+      - .env
+    environment:
+      - APP_ENV=development
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+    networks:
+      - brujula_net
+
+  test:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.dev
+    container_name: brujula_api_test
+    volumes:
+      - .:/app
+      - /app/.venv
+    env_file:
+      - .env.test
+    environment:
+      - APP_ENV=testing
+    depends_on:
+      db-test:
+        condition: service_healthy
+      redis-test:
+        condition: service_started
+    command: pytest tests/ -v --tb=short
+    networks:
+      - brujula_net
+
+  db:
+    image: postgres:15-alpine
+    container_name: brujula_db_dev
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: brujula_db
+      POSTGRES_USER: brujula
+      POSTGRES_PASSWORD: brujula123
+    volumes:
+      - postgres_data_dev:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U brujula -d brujula_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - brujula_net
+
+  db-test:
+    image: postgres:15-alpine
+    container_name: brujula_db_test
+    environment:
+      POSTGRES_DB: brujula_test_db
+      POSTGRES_USER: brujula
+      POSTGRES_PASSWORD: brujula123
+    tmpfs:
+      - /var/lib/postgresql/data  # RAM for faster tests
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U brujula -d brujula_test_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - brujula_net
+
+  redis:
+    image: redis:7-alpine
+    container_name: brujula_redis_dev
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data_dev:/data
+    networks:
+      - brujula_net
+
+  redis-test:
+    image: redis:7-alpine
+    container_name: brujula_redis_test
+    networks:
+      - brujula_net
+
+networks:
+  brujula_net:
+    driver: bridge
+
+volumes:
+  postgres_data_dev:
+  redis_data_dev:

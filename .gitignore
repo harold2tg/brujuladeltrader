@@ -1,0 +1,41 @@
+# Environment files
+.env
+.env.local
+.env.production
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+.venv/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Docker
+docker-compose.override.yml
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Uploads (user data)
+Bakend-bdt/uploads/
+
+# Node modules (web)
+brujula-web/node_modules/
+brujula-web/.next/
+
+# Logs
+*.log
