@@ -11,6 +11,15 @@ from app.modules.auth.service import AuthService, decode_token
 from app.shared.exceptions import UnauthorizedException
 
 
+async def get_redis() -> redis.Redis:
+    """Dependency that provides a Redis client."""
+    client = redis.from_url(settings.REDIS_URL, decode_responses=True)
+    try:
+        yield client
+    finally:
+        await client.aclose()
+
+
 async def get_current_user(
     authorization: str = Header(...),
     db: AsyncSession = Depends(get_db),

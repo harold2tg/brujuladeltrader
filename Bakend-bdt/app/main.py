@@ -10,6 +10,7 @@ from app.config import settings
 from app.modules.auth.router import router as auth_router
 from app.modules.users.router import router as users_router
 from app.modules.uploads.router import router as uploads_router
+from app.modules.analytics.router import router as analytics_router
 
 
 @asynccontextmanager
@@ -41,6 +42,7 @@ app.add_middleware(
 app.include_router(auth_router)
 app.include_router(users_router)
 app.include_router(uploads_router)
+app.include_router(analytics_router)
 
 
 @app.get("/health")
