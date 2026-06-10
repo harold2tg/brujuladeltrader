@@ -60,18 +60,20 @@ Chain strategy: stacked-to-main
 
 ## Phase 4: Parallel Run — Validation
 
-- [ ] 4.1 Create `infra/scripts/validate-cloud-run.sh` — script to test all Cloud Run endpoints: health check, auth flow, file upload, AI diagnosis
-- [ ] 4.2 Create `infra/scripts/compare-responses.sh` — script to send identical requests to VPS and Cloud Run, compare responses (status codes, JSON structure)
+- [x] 4.1 Create `infra/scripts/validate-cloud-run.sh` — script to test all Cloud Run endpoints: health check, auth flow, file upload, AI diagnosis
+- [x] 4.2 Create `infra/scripts/compare-responses.sh` — script to send identical requests to VPS and Cloud Run, compare responses (status codes, JSON structure)
 - [ ] 4.3 Run parallel validation for 48 hours — VPS serves production, Cloud Run tested internally; log any discrepancies
 - [ ] 4.4 Verify Cloud SQL data consistency — compare row counts between VPS PostgreSQL and Cloud SQL for all tables
 
 ## Phase 5: DNS Cutover
 
+- [x] 5.0 Create `infra/scripts/cutover-dns.sh` — script to update Cloud DNS A records to LB IP
+- [x] 5.0 Create `infra/scripts/rollback.sh` — script to revert DNS to VPS IP (emergency rollback)
 - [ ] 5.1 Update Cloud DNS A records: brujula.app → LB IP, api.brujula.app → LB IP, www.brujula.app → LB IP
 - [ ] 5.2 Verify HTTPS serves correctly: `curl -I https://brujula.app` and `curl -I https://api.brujula.app`
 - [ ] 5.3 Verify SSL certificate is valid and auto-renewing
 - [ ] 5.4 Monitor for 24 hours post-cutover — check Cloud Run logs, error rates, latency
-- [ ] 5.5 Keep VPS as cold standby for 7 days — document rollback procedure (revert DNS to VPS IP)
+- [x] 5.5 Keep VPS as cold standby for 7 days — document rollback procedure (revert DNS to VPS IP)
 
 ## Phase 6: Decommission
 

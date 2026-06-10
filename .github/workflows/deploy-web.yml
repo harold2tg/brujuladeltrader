@@ -1,0 +1,136 @@
+name: Deploy Web to Cloud Run
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "Frontend-bdt/**"
+      - ".github/workflows/deploy-web.yml"
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "Target environment"
+        required: true
+        default: "prod"
+        type: choice
+        options:
+          - prod
+          - dev
+
+permissions:
+  contents: read
+  id-token: write
+  storage: write
+
+env:
+  GCP_PROJECT: ${{ secrets.GCP_PROJECT_ID }}
+  GCP_REGION: ${{ secrets.GCP_REGION }}
+  AR_REPO: brujula
+  SERVICE_NAME: brujula-web
+
+jobs:
+  build-and-deploy:
+    name: Build & Deploy Web
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+          project_id: ${{ env.GCP_PROJECT }}
+
+      - name: Setup gcloud
+        uses: google-github-actions/setup-gcloud@v2
+        with:
+          project_id: ${{ env.GCP_PROJECT }}
+
+      - name: Configure Docker for Artifact Registry
+        run: gcloud auth configure-docker ${{ env.GCP_REGION }}-docker.pkg.dev --quiet
+
+      - name: Set image tag
+        id: tag
+        run: |
+          if [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
+            echo "tag=${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT }}/${{ env.AR_REPO }}/web:${{ github.sha }}" >> "$GITHUB_OUTPUT"
+            echo "latest=${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT }}/${{ env.AR_REPO }}/web:latest" >> "$GITHUB_OUTPUT"
+          else
+            echo "tag=${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT }}/${{ env.AR_REPO }}/web:dev-${{ github.sha }}" >> "$GITHUB_OUTPUT"
+            echo "latest=" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Build and push image
+        env:
+          NEXT_PUBLIC_API_URL: ${{ secrets.NEXT_PUBLIC_API_URL }}
+          NEXT_PUBLIC_DEFAULT_LOCALE: es
+        run: |
+          docker build \
+            -f Frontend-bdt/Dockerfile \
+            -t ${{ steps.tag.outputs.tag }} \
+            -t ${{ steps.tag.outputs.latest }} \
+            --build-arg NEXT_PUBLIC_API_URL="$NEXT_PUBLIC_API_URL" \
+            --build-arg NEXT_PUBLIC_DEFAULT_LOCALE="$NEXT_PUBLIC_DEFAULT_LOCALE" \
+            Frontend-bdt/
+
+          docker push ${{ steps.tag.outputs.tag }}
+          if [[ -n "${{ steps.tag.outputs.latest }}" ]]; then
+            docker push ${{ steps.tag.outputs.latest }}
+          fi
+
+      - name: Deploy to Cloud Run
+        run: |
+          ENV="${{ inputs.environment || 'prod' }}"
+          SERVICE="${{ env.SERVICE_NAME }}-${ENV}"
+
+          gcloud run deploy "$SERVICE" \
+            --image "${{ steps.tag.outputs.tag }}" \
+            --region "${{ env.GCP_REGION }}" \
+            --platform managed \
+            --port 3000 \
+            --memory 256Mi \
+            --cpu 1 \
+            --min-instances 0 \
+            --max-instances 5 \
+            --concurrency 100 \
+            --timeout 60 \
+            --no-traffic
+
+      - name: Smoke test (no traffic routing yet)
+        run: |
+          ENV="${{ inputs.environment || 'prod' }}"
+          SERVICE="${{ env.SERVICE_NAME }}-${ENV }}"
+          URL=$(gcloud run services describe "$SERVICE" --region "${{ env.GCP_REGION }}" --format="value(status.url)")
+
+          echo "Smoke testing: $URL"
+          HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$URL" --max-time 10)
+          if [[ "$HTTP_STATUS" != "200" ]]; then
+            echo "❌ Smoke test failed with status $HTTP_STATUS"
+            exit 1
+          fi
+          echo "✅ Smoke test passed"
+
+      - name: Route traffic to new revision
+        if: github.ref == 'refs/heads/main'
+        run: |
+          ENV="${{ inputs.environment || 'prod' }}"
+          SERVICE="${{ env.SERVICE_NAME }}-${ENV}"
+
+          gcloud run services update-traffic "$SERVICE" \
+            --region "${{ env.GCP_REGION }}" \
+            --to-latest
+
+          echo "✅ Traffic routed to latest revision"
+
+      - name: Verify production endpoint
+        if: github.ref == 'refs/heads/main'
+        run: |
+          ENV="${{ inputs.environment || 'prod' }}"
+          SERVICE="${{ env.SERVICE_NAME }}-${ENV}"
+          URL=$(gcloud run services describe "$SERVICE" --region "${{ env.GCP_REGION }}" --format="value(status.url)")
+
+          echo "Production URL: $URL"
+          HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$URL" --max-time 10)
+          echo "Status: $HTTP_STATUS"
