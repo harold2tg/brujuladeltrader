@@ -31,3 +31,15 @@ variable "redis_password" {
   type        = string
   sensitive   = true
 }
+
+variable "domain" {
+  description = "Primary domain (e.g. brujula.app)"
+  type        = string
+  default     = "brujula.app"
+}
+
+variable "api_subdomain" {
+  description = "API subdomain (e.g. api.brujula.app)"
+  type        = string
+  default     = "api.brujula.app"
+}

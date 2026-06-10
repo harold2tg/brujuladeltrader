@@ -13,7 +13,7 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 # Poetry
-RUN pip install poetry==1.8.0
+RUN pip install --no-cache-dir --break-system-packages poetry==1.8.0
 RUN poetry config virtualenvs.create false
 
 # Dependencies
@@ -31,4 +31,7 @@ USER brujula
 
 EXPOSE 8000
 
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "2"]
+# Cloud Run injects PORT env var; default to 8000 for backward compatibility
+ENV PORT=8000
+
+CMD ["sh", "-c", "uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000} --workers 2"]

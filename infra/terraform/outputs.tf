@@ -56,3 +56,32 @@ output "uploads_bucket_url" {
   description = "GCS uploads bucket URL"
   value       = module.storage.bucket_url
 }
+
+# ---------------------------------------------------------------------------
+# Compute layer outputs
+# ---------------------------------------------------------------------------
+
+output "cloud_run_api_url" {
+  description = "Cloud Run API service URL"
+  value       = module.cloud_run.api_service_url
+}
+
+output "cloud_run_web_url" {
+  description = "Cloud Run Web service URL"
+  value       = module.cloud_run.web_service_url
+}
+
+output "worker_vm_name" {
+  description = "Worker VM instance name"
+  value       = module.compute_worker.vm_name
+}
+
+output "worker_vm_external_ip" {
+  description = "Worker VM external IP"
+  value       = module.compute_worker.vm_external_ip
+}
+
+output "load_balancer_ip" {
+  description = "Load balancer static IP"
+  value       = module.load_balancer.lb_ip_address
+}

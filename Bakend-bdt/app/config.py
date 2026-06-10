@@ -30,8 +30,9 @@ class Settings(BaseSettings):
     ENCRYPTION_KEY: str
 
     # Storage
-    STORAGE_TYPE: str = "local"
+    STORAGE_TYPE: str = "local"  # local | gcs
     STORAGE_LOCAL_PATH: str = "/app/uploads"
+    GCS_BUCKET: str = ""  # Required when STORAGE_TYPE="gcs"
 
     # Plan limits
     FREE_PLAN_MAX_UPLOADS: int = 5
