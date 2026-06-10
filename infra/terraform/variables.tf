@@ -19,3 +19,15 @@ variable "env" {
     error_message = "env must be 'dev' or 'prod'."
   }
 }
+
+variable "db_password" {
+  description = "Password for the Cloud SQL brujula user"
+  type        = string
+  sensitive   = true
+}
+
+variable "redis_password" {
+  description = "Password for Memorystore Redis authentication"
+  type        = string
+  sensitive   = true
+}

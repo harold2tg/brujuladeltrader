@@ -17,3 +17,8 @@ output "vpc_connector_name" {
   description = "Serverless VPC Access connector name (for Cloud Run)"
   value       = google_vpc_access_connector.main.name
 }
+
+output "vpc_peering_connection" {
+  description = "VPC peering connection for Cloud SQL private IP"
+  value       = google_service_networking_connection.private_vpc
+}

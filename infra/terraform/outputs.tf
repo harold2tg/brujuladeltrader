@@ -22,3 +22,37 @@ output "worker_sa_email" {
   description = "Worker service account email"
   value       = module.iam.worker_sa_email
 }
+
+# ---------------------------------------------------------------------------
+# Data layer outputs
+# ---------------------------------------------------------------------------
+
+output "cloud_sql_connection_name" {
+  description = "Cloud SQL instance connection name"
+  value       = module.cloud_sql.instance_connection_name
+}
+
+output "cloud_sql_private_ip" {
+  description = "Cloud SQL private IP address"
+  value       = module.cloud_sql.private_ip_address
+}
+
+output "redis_host" {
+  description = "Memorystore Redis host IP"
+  value       = module.memorystore.host
+}
+
+output "redis_port" {
+  description = "Memorystore Redis port"
+  value       = module.memorystore.port
+}
+
+output "uploads_bucket_name" {
+  description = "GCS uploads bucket name"
+  value       = module.storage.bucket_name
+}
+
+output "uploads_bucket_url" {
+  description = "GCS uploads bucket URL"
+  value       = module.storage.bucket_url
+}

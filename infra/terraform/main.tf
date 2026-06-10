@@ -42,3 +42,33 @@ module "secret_manager" {
   env             = var.env
   cloud_run_sa    = module.iam.cloud_run_sa_email
 }
+
+# ---------------------------------------------------------------------------
+# Data layer modules
+# ---------------------------------------------------------------------------
+
+module "cloud_sql" {
+  source               = "./modules/cloud-sql"
+  project_id           = var.project_id
+  env                  = var.env
+  region               = var.region
+  vpc_id               = module.networking.vpc_id
+  vpc_peering_connection = module.networking.vpc_peering_connection
+  db_password          = var.db_password
+}
+
+module "memorystore" {
+  source          = "./modules/memorystore"
+  project_id      = var.project_id
+  env             = var.env
+  region          = var.region
+  vpc_id          = module.networking.vpc_id
+  redis_password  = var.redis_password
+}
+
+module "storage" {
+  source     = "./modules/storage"
+  project_id = var.project_id
+  env        = var.env
+  region     = var.region
+}
