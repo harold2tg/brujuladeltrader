@@ -29,21 +29,21 @@ Chain strategy: stacked-to-main
 
 ## Phase 1: Foundation — Terraform, VPC, IAM, Secret Manager
 
-- [ ] 1.1 Create `infra/terraform/main.tf` — root config with GCP provider, GCS backend, project/region variables
-- [ ] 1.2 Create `infra/terraform/variables.tf` — input variables: project_id, region, env, db_password, redis_password
-- [ ] 1.3 Create `infra/terraform/outputs.tf` — outputs: service URLs, LB IP, Cloud SQL connection name
-- [ ] 1.4 Create `infra/terraform/modules/networking/main.tf` — VPC, subnet (10.0.0.0/24), serverless VPC connector, firewall rules (allow internal, deny external)
-- [ ] 1.5 Create `infra/terraform/modules/iam/main.tf` — service accounts: cloud-run-sa, cloud-sql-sa, worker-sa; custom roles for Secret Manager access
-- [ ] 1.6 Create `infra/terraform/modules/secret-manager/main.tf` — secrets: JWT_SECRET_KEY, ENCRYPTION_KEY, ANTHROPIC_API_KEY, DB_PASSWORD, REDIS_PASSWORD; IAM bindings for cloud-run-sa
-- [ ] 1.7 Create `infra/scripts/setup-secrets.sh` — script to populate Secret Manager from .env file (reads local .env, pushes each var as a secret)
-- [ ] 1.8 Create `.github/workflows/infra.yml` — CI: terraform fmt check, terraform plan on PR, terraform apply on push to main (infra/ path trigger)
+- [x] 1.1 Create `infra/terraform/main.tf` — root config with GCP provider, GCS backend, project/region variables
+- [x] 1.2 Create `infra/terraform/variables.tf` — input variables: project_id, region, env, db_password, redis_password
+- [x] 1.3 Create `infra/terraform/outputs.tf` — outputs: service URLs, LB IP, Cloud SQL connection name
+- [x] 1.4 Create `infra/terraform/modules/networking/main.tf` — VPC, subnet (10.0.0.0/24), serverless VPC connector, firewall rules (allow internal, deny external)
+- [x] 1.5 Create `infra/terraform/modules/iam/main.tf` — service accounts: cloud-run-sa, cloud-sql-sa, worker-sa; custom roles for Secret Manager access
+- [x] 1.6 Create `infra/terraform/modules/secret-manager/main.tf` — secrets: JWT_SECRET_KEY, ENCRYPTION_KEY, ANTHROPIC_API_KEY, DB_PASSWORD, REDIS_PASSWORD; IAM bindings for cloud-run-sa
+- [x] 1.7 Create `infra/scripts/setup-secrets.sh` — script to populate Secret Manager from .env file (reads local .env, pushes each var as a secret)
+- [x] 1.8 Create `.github/workflows/infra.yml` — CI: terraform fmt check, terraform plan on PR, terraform apply on push to main (infra/ path trigger)
 
 ## Phase 2: Databases — Cloud SQL, Memorystore, Storage
 
-- [ ] 2.1 Create `infra/terraform/modules/cloud-sql/main.tf` — PostgreSQL 15 instance (db-f1-micro), private IP only, database brujula_db, user brujula, authorized networks empty
-- [ ] 2.2 Create `infra/terraform/modules/memorystore/main.tf` — Redis 7 basic tier, 1GB, private IP, auth enabled
-- [ ] 2.3 Create `infra/terraform/modules/storage/main.tf` — GCS bucket brujula-uploads-{env}, lifecycle rules (delete after 90 days), uniform bucket-level access
-- [ ] 2.4 Create `infra/scripts/migrate-db.sh` — script to: (1) pg_dump from VPS, (2) pg_restore to Cloud SQL, (3) verify row counts and checksums
+- [x] 2.1 Create `infra/terraform/modules/cloud-sql/main.tf` — PostgreSQL 15 instance (db-f1-micro), private IP only, database brujula_db, user brujula, authorized networks empty
+- [x] 2.2 Create `infra/terraform/modules/memorystore/main.tf` — Redis 7 basic tier, 1GB, private IP, auth enabled
+- [x] 2.3 Create `infra/terraform/modules/storage/main.tf` — GCS bucket brujula-uploads-{env}, lifecycle rules (delete after 90 days), uniform bucket-level access
+- [x] 2.4 Create `infra/scripts/migrate-db.sh` — script to: (1) pg_dump from VPS, (2) pg_restore to Cloud SQL, (3) verify row counts and checksums
 - [ ] 2.5 Run `setup-secrets.sh` to populate all secrets in Secret Manager
 - [ ] 2.6 Run `terraform apply` for Phase 2 modules (cloud-sql, memorystore, storage) — verify all resources created
 
