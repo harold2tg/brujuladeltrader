@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="{{ language }}">
+<head>
+    <meta charset="UTF-8">
+    <title>Reporte - {{ year }}{% if month %}-{{ "%02d"|format(month) }}{% endif %}</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 2cm;
+        }
+        body {
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            font-size: 12px;
+            color: #333;
+            line-height: 1.6;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #2c3e50;
+        }
+        .header h1 {
+            color: #2c3e50;
+            margin: 0;
+            font-size: 24px;
+        }
+        .header .subtitle {
+            color: #7f8c8d;
+            font-size: 14px;
+            margin-top: 5px;
+        }
+        .section {
+            margin-bottom: 25px;
+        }
+        .section h2 {
+            color: #2c3e50;
+            font-size: 16px;
+            margin-bottom: 15px;
+            padding-bottom: 5px;
+            border-bottom: 1px solid #ecf0f1;
+        }
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .metric-card {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            text-align: center;
+        }
+        .metric-card .value {
+            font-size: 20px;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        .metric-card .label {
+            font-size: 11px;
+            color: #7f8c8d;
+            margin-top: 5px;
+        }
+        .metric-card.positive .value { color: #27ae60; }
+        .metric-card.negative .value { color: #e74c3c; }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        th, td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid #ecf0f1;
+        }
+        th {
+            background: #2c3e50;
+            color: white;
+            font-weight: 600;
+        }
+        tr:nth-child(even) {
+            background: #f8f9fa;
+        }
+        .insights {
+            margin-top: 20px;
+        }
+        .insight {
+            padding: 12px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+            border-left: 4px solid;
+        }
+        .insight.success {
+            background: #d4edda;
+            border-color: #27ae60;
+        }
+        .insight.warning {
+            background: #fff3cd;
+            border-color: #f39c12;
+        }
+        .insight.critical {
+            background: #f8d7da;
+            border-color: #e74c3c;
+        }
+        .insight.info {
+            background: #d1ecf1;
+            border-color: #17a2b8;
+        }
+        .insight .title {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        .summary {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 5px;
+            margin-top: 20px;
+            font-size: 14px;
+        }
+        .footer {
+            margin-top: 40px;
+            text-align: center;
+            color: #7f8c8d;
+            font-size: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>La Brújula del Trader</h1>
+        <div class="subtitle">
+            {% if language == "es" %}
+                Reporte {% if month %}Mensual{% else %}Anual{% endif %} - {{ year }}{% if month %}-{{ "%02d"|format(month) }}{% endif %}
+            {% else %}
+                {% if month %}Monthly{% else %}Annual{% endif %} Report - {{ year }}{% if month %}-{{ "%02d"|format(month) }}{% endif %}
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>{% if language == "es" %}Resumen Global{% else %}Global Summary{% endif %}</h2>
+        <div class="metrics-grid">
+            <div class="metric-card">
+                <div class="value">{{ metrics.total_trades }}</div>
+                <div class="label">{% if language == "es" %}Total Trades{% else %}Total Trades{% endif %}</div>
+            </div>
+            <div class="metric-card {% if metrics.win_rate >= 0.5 %}positive{% else %}negative{% endif %}">
+                <div class="value">{{ "%.1f"|format(metrics.win_rate * 100) }}%</div>
+                <div class="label">{% if language == "es" %}Win Rate{% else %}Win Rate{% endif %}</div>
+            </div>
+            <div class="metric-card {% if metrics.net_pnl >= 0 %}positive{% else %}negative{% endif %}">
+                <div class="value">${{ "{:,.2f}".format(metrics.net_pnl) }}</div>
+                <div class="label">{% if language == "es" %}PnL Neto{% else %}Net PnL{% endif %}</div>
+            </div>
+            <div class="metric-card">
+                <div class="value">{{ metrics.winning_trades }}</div>
+                <div class="label">{% if language == "es" %}Ganadores{% else %}Winners{% endif %}</div>
+            </div>
+            <div class="metric-card">
+                <div class="value">{{ metrics.losing_trades }}</div>
+                <div class="label">{% if language == "es" %}Perdedores{% else %}Losers{% endif %}</div>
+            </div>
+            <div class="metric-card">
+                <div class="value">{{ metrics.profit_factor if metrics.profit_factor else "N/A" }}</div>
+                <div class="label">{% if language == "es" %}Profit Factor{% else %}Profit Factor{% endif %}</div>
+            </div>
+        </div>
+    </div>
+
+    {% if by_hour %}
+    <div class="section">
+        <h2>{% if language == "es" %}Rendimiento por Hora{% else %}Performance by Hour{% endif %}</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>{% if language == "es" %}Hora{% else %}Hour{% endif %}</th>
+                    <th>{% if language == "es" %}Trades{% else %}Trades{% endif %}</th>
+                    <th>{% if language == "es" %}Win Rate{% else %}Win Rate{% endif %}</th>
+                    <th>{% if language == "es" %}PnL Neto{% else %}Net PnL{% endif %}</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for h in by_hour %}
+                <tr>
+                    <td>{{ h.label }}</td>
+                    <td>{{ h.trades }}</td>
+                    <td>{{ "%.1f"|format(h.win_rate * 100) }}%</td>
+                    <td class="{% if h.net_pnl >= 0 %}positive{% else %}negative{% endif %}">${{ "{:,.2f}".format(h.net_pnl) }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% endif %}
+
+    {% if by_session %}
+    <div class="section">
+        <h2>{% if language == "es" %}Rendimiento por Sesión{% else %}Performance by Session{% endif %}</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>{% if language == "es" %}Sesión{% else %}Session{% endif %}</th>
+                    <th>{% if language == "es" %}Trades{% else %}Trades{% endif %}</th>
+                    <th>{% if language == "es" %}Win Rate{% else %}Win Rate{% endif %}</th>
+                    <th>{% if language == "es" %}PnL Neto{% else %}Net PnL{% endif %}</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for s in by_session %}
+                <tr>
+                    <td>{{ s.label_es if language == "es" else s.label_en }}</td>
+                    <td>{{ s.trades }}</td>
+                    <td>{{ "%.1f"|format(s.win_rate * 100) }}%</td>
+                    <td class="{% if s.net_pnl >= 0 %}positive{% else %}negative{% endif %}">${{ "{:,.2f}".format(s.net_pnl) }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% endif %}
+
+    {% if insights %}
+    <div class="section">
+        <h2>{% if language == "es" %}Insights{% else %}Insights{% endif %}</h2>
+        <div class="insights">
+            {% for insight in insights %}
+            <div class="insight {{ insight.type }}">
+                <div class="title">{{ insight.title }}</div>
+                <div>{{ insight.text }}</div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="footer">
+        La Brújula del Trader - {% if language == "es" %}Reporte generado automáticamente{% else %}Auto-generated report{% endif %}
+    </div>
+</body>
+</html>

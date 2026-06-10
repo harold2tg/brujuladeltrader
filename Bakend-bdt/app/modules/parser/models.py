@@ -35,6 +35,7 @@ class Trade(Base):
     session = Column(String(20), nullable=False)
     is_winner = Column(Boolean, nullable=False)
     trade_number = Column(Integer, nullable=False)
+    deal_id = Column(String(100), nullable=True)  # cTrader deal ID for idempotency
 
     # Relationships
     upload = relationship("Upload", backref="trades")
