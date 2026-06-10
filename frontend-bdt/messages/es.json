@@ -47,7 +47,10 @@
   },
   "dashboard": {
     "title": "Mi Dashboard",
-    "placeholder": "Métricas y gráficos próximamente — Phase 5",
+    "empty": "No tenés uploads para analizar",
+    "emptyHint": "Subí tu primer archivo de operaciones para ver métricas",
+    "selectUpload": "Ir a Uploads",
+    "latestUpload": "Archivo más reciente: {name}",
     "metrics": {
       "winRate": "Win Rate",
       "netPnl": "PnL Neto",
@@ -59,7 +62,28 @@
       "notProfitable": "Tu sistema no es rentable aún"
     },
     "aiDiagnostic": "Diagnóstico IA",
-    "selectUpload": "Seleccionar archivo"
+    "selectUploadDropdown": "Seleccionar archivo"
+  },
+  "analytics": {
+    "title": "Análisis",
+    "noUpload": "Seleccioná un archivo para analizar",
+    "noUploadHint": "Elegí un archivo de la lista para ver el análisis completo",
+    "goToUploads": "Ir a Uploads",
+    "tabs": {
+      "summary": "Resumen",
+      "byHour": "Por Hora",
+      "byDay": "Por Día",
+      "bySession": "Por Sesión",
+      "byMonth": "Por Mes",
+      "distribution": "Distribución"
+    },
+    "charts": {
+      "pnlByHour": "PnL por Hora",
+      "winRateByDay": "Win Rate por Día",
+      "bySession": "Distribución por Sesión",
+      "monthlyPnl": "PnL Mensual",
+      "distribution": "Distribución de PnL"
+    }
   },
   "uploads": {
     "title": "Mis Archivos",

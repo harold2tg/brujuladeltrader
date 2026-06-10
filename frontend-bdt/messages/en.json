@@ -47,7 +47,10 @@
   },
   "dashboard": {
     "title": "My Dashboard",
-    "placeholder": "Metrics and charts coming soon — Phase 5",
+    "empty": "No uploads to analyze yet",
+    "emptyHint": "Upload your first trading file to see metrics",
+    "selectUpload": "Go to Uploads",
+    "latestUpload": "Latest upload: {name}",
     "metrics": {
       "winRate": "Win Rate",
       "netPnl": "Net PnL",
@@ -59,7 +62,28 @@
       "notProfitable": "Your system is not profitable yet"
     },
     "aiDiagnostic": "AI Diagnostic",
-    "selectUpload": "Select file"
+    "selectUploadDropdown": "Select file"
+  },
+  "analytics": {
+    "title": "Analytics",
+    "noUpload": "Select a file to analyze",
+    "noUploadHint": "Choose a file from the list to see the full analysis",
+    "goToUploads": "Go to Uploads",
+    "tabs": {
+      "summary": "Summary",
+      "byHour": "By Hour",
+      "byDay": "By Day",
+      "bySession": "By Session",
+      "byMonth": "By Month",
+      "distribution": "Distribution"
+    },
+    "charts": {
+      "pnlByHour": "PnL by Hour",
+      "winRateByDay": "Win Rate by Day",
+      "bySession": "Distribution by Session",
+      "monthlyPnl": "Monthly PnL",
+      "distribution": "PnL Distribution"
+    }
   },
   "uploads": {
     "title": "My Files",

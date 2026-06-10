@@ -75,6 +75,22 @@ jobs:
             docker push ${{ steps.tag.outputs.latest }}
           fi
 
+      - name: Get Redis IP from Memorystore
+        id: redis
+        run: |
+          ENV="${{ inputs.environment || 'prod' }}"
+          REDIS_HOST=$(gcloud redis instances describe "brujula-redis-${ENV}" \
+            --region "${{ env.GCP_REGION }}" \
+            --format="value(host)" 2>/dev/null || echo "")
+          
+          if [[ -z "$REDIS_HOST" ]]; then
+            echo "❌ Redis instance not found: brujula-redis-${ENV}"
+            exit 1
+          fi
+          
+          echo "host=$REDIS_HOST" >> "$GITHUB_OUTPUT"
+          echo "Redis host: $REDIS_HOST"
+
       - name: Deploy to Cloud Run
         run: |
           ENV="${{ inputs.environment || 'prod' }}"
@@ -94,13 +110,13 @@ jobs:
             --add-cloudsql-instances "${{ env.GCP_PROJECT }}:${{ env.GCP_REGION }}:brujula-${ENV}" \
             --vpc-connector "brujula-connector-${ENV}" \
             --set-secrets="JWT_SECRET_KEY=brujula-jwt-secret-key-${ENV}:latest,ENCRYPTION_KEY=brujula-encryption-key-${ENV}:latest,ANTHROPIC_API_KEY=brujula-anthropic-api-key-${ENV}:latest" \
-            --set-env-vars="APP_ENV=${ENV},STORAGE_TYPE=gcs,GCS_BUCKET=brujula-uploads-${ENV},DATABASE_URL=postgresql+asyncpg://brujula@//cloudsql/${{ env.GCP_PROJECT }}:${{ env.GCP_REGION }}:brujula-${ENV}/brujula_db,DATABASE_URL_SYNC=postgresql://brujula@//cloudsql/${{ env.GCP_PROJECT }}:${{ env.GCP_REGION }}:brujula-${ENV}/brujula_db,REDIS_URL=redis://10.0.0.2:6379/0,CORS_ORIGINS=https://brujula.app,https://www.brujula.app" \
+            --set-env-vars="APP_ENV=${ENV},STORAGE_TYPE=gcs,GCS_BUCKET=brujula-uploads-${ENV},DATABASE_URL=postgresql+asyncpg://brujula@//cloudsql/${{ env.GCP_PROJECT }}:${{ env.GCP_REGION }}:brujula-${ENV}/brujula_db,DATABASE_URL_SYNC=postgresql://brujula@//cloudsql/${{ env.GCP_PROJECT }}:${{ env.GCP_REGION }}:brujula-${ENV}/brujula_db,REDIS_URL=redis://${{ steps.redis.outputs.host }}:6379/0,CORS_ORIGINS=https://brujula.app,https://www.brujula.app" \
             --no-traffic
 
       - name: Smoke test (no traffic routing yet)
         run: |
           ENV="${{ inputs.environment || 'prod' }}"
-          SERVICE="${{ env.SERVICE_NAME }}-${ENV }}"
+          SERVICE="${{ env.SERVICE_NAME }}-${ENV}"
           URL=$(gcloud run services describe "$SERVICE" --region "${{ env.GCP_REGION }}" --format="value(status.url)")
 
           echo "Smoke testing: $URL/health"

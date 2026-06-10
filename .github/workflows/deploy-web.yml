@@ -101,7 +101,7 @@ jobs:
       - name: Smoke test (no traffic routing yet)
         run: |
           ENV="${{ inputs.environment || 'prod' }}"
-          SERVICE="${{ env.SERVICE_NAME }}-${ENV }}"
+          SERVICE="${{ env.SERVICE_NAME }}-${ENV}"
           URL=$(gcloud run services describe "$SERVICE" --region "${{ env.GCP_REGION }}" --format="value(status.url)")
 
           echo "Smoke testing: $URL"
