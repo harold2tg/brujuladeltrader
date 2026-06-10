@@ -1,0 +1,24 @@
+version: "3.9"
+
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: brujula_web_dev
+    ports:
+      - "3000:3000"
+    volumes:
+      - .:/app
+      - /app/node_modules
+      - /app/.next
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:8000
+      - NEXT_PUBLIC_APP_NAME=La Brújula del Trader
+      - NEXT_PUBLIC_DEFAULT_LOCALE=es
+    networks:
+      - brujula_net
+
+networks:
+  brujula_net:
+    driver: bridge

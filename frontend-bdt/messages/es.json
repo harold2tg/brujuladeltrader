@@ -1,0 +1,98 @@
+{
+  "common": {
+    "appName": "La Brújula del Trader",
+    "loading": "Cargando...",
+    "error": "Error",
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "delete": "Eliminar",
+    "confirm": "Confirmar",
+    "back": "Volver",
+    "next": "Siguiente",
+    "search": "Buscar",
+    "noData": "Sin datos disponibles",
+    "retry": "Reintentar",
+    "openMenu": "Menú"
+  },
+  "nav": {
+    "dashboard": "Dashboard",
+    "uploads": "Mis Archivos",
+    "analytics": "Análisis",
+    "ctrader": "cTrader",
+    "alerts": "Alertas",
+    "reports": "Reportes",
+    "settings": "Configuración",
+    "logout": "Cerrar Sesión"
+  },
+  "auth": {
+    "login": {
+      "title": "Iniciar Sesión",
+      "email": "Email",
+      "password": "Contraseña",
+      "submit": "Ingresar",
+      "forgotPassword": "¿Olvidaste tu contraseña?",
+      "noAccount": "¿No tenés cuenta?",
+      "register": "Registrate"
+    },
+    "register": {
+      "title": "Crear Cuenta",
+      "name": "Nombre",
+      "email": "Email",
+      "password": "Contraseña",
+      "confirmPassword": "Confirmar contraseña",
+      "submit": "Crear cuenta",
+      "hasAccount": "¿Ya tenés cuenta?",
+      "login": "Iniciá sesión"
+    }
+  },
+  "dashboard": {
+    "title": "Mi Dashboard",
+    "placeholder": "Métricas y gráficos próximamente — Phase 5",
+    "metrics": {
+      "winRate": "Win Rate",
+      "netPnl": "PnL Neto",
+      "rrRatio": "Ratio R:R",
+      "totalTrades": "Total Operaciones"
+    },
+    "diagnostic": {
+      "profitable": "Tu sistema es rentable",
+      "notProfitable": "Tu sistema no es rentable aún"
+    },
+    "aiDiagnostic": "Diagnóstico IA",
+    "selectUpload": "Seleccionar archivo"
+  },
+  "uploads": {
+    "title": "Mis Archivos",
+    "dropzone": "Arrastrá tu archivo CSV o Excel aquí",
+    "dropzoneHint": "o hacé click para seleccionar",
+    "uploading": "Subiendo...",
+    "uploadButton": "Subir",
+    "uploadSuccess": "Archivo subido correctamente",
+    "uploadError": "Error al subir el archivo: ",
+    "invalidType": "Tipo de archivo no válido. Solo se aceptan CSV y Excel.",
+    "invalidSize": "El archivo supera el límite de 10 MB.",
+    "processing": "Procesando {filename}...",
+    "loadError": "Error al cargar los archivos",
+    "status": {
+      "pending": "Pendiente",
+      "processing": "Procesando",
+      "ready": "Listo",
+      "error": "Error"
+    },
+    "empty": "No tenés archivos subidos aún",
+    "emptyHint": "Subí tu primer archivo de operaciones para empezar a analizar",
+    "deleteTitle": "Eliminar archivo",
+    "deleteConfirm": "¿Estás seguro que querés eliminar este archivo?",
+    "deleteSuccess": "Archivo eliminado",
+    "deleteError": "Error al eliminar: ",
+    "trades": "trades",
+    "period": "Período"
+  },
+  "settings": {
+    "title": "Configuración",
+    "profile": "Perfil",
+    "security": "Seguridad",
+    "plan": "Plan",
+    "dangerZone": "Zona de Peligro"
+  }
+}

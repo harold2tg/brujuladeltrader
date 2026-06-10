@@ -1,0 +1,98 @@
+{
+  "common": {
+    "appName": "La Brújula del Trader",
+    "loading": "Loading...",
+    "error": "Error",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "confirm": "Confirm",
+    "back": "Back",
+    "next": "Next",
+    "search": "Search",
+    "noData": "No data available",
+    "retry": "Retry",
+    "openMenu": "Menu"
+  },
+  "nav": {
+    "dashboard": "Dashboard",
+    "uploads": "My Files",
+    "analytics": "Analytics",
+    "ctrader": "cTrader",
+    "alerts": "Alerts",
+    "reports": "Reports",
+    "settings": "Settings",
+    "logout": "Log Out"
+  },
+  "auth": {
+    "login": {
+      "title": "Sign In",
+      "email": "Email",
+      "password": "Password",
+      "submit": "Sign In",
+      "forgotPassword": "Forgot your password?",
+      "noAccount": "Don't have an account?",
+      "register": "Sign up here"
+    },
+    "register": {
+      "title": "Create Account",
+      "name": "Name",
+      "email": "Email",
+      "password": "Password",
+      "confirmPassword": "Confirm password",
+      "submit": "Create Account",
+      "hasAccount": "Already have an account?",
+      "login": "Sign in"
+    }
+  },
+  "dashboard": {
+    "title": "My Dashboard",
+    "placeholder": "Metrics and charts coming soon — Phase 5",
+    "metrics": {
+      "winRate": "Win Rate",
+      "netPnl": "Net PnL",
+      "rrRatio": "R:R Ratio",
+      "totalTrades": "Total Trades"
+    },
+    "diagnostic": {
+      "profitable": "Your system is profitable",
+      "notProfitable": "Your system is not profitable yet"
+    },
+    "aiDiagnostic": "AI Diagnostic",
+    "selectUpload": "Select file"
+  },
+  "uploads": {
+    "title": "My Files",
+    "dropzone": "Drag your CSV or Excel file here",
+    "dropzoneHint": "or click to select",
+    "uploading": "Uploading...",
+    "uploadButton": "Upload",
+    "uploadSuccess": "File uploaded successfully",
+    "uploadError": "Error uploading file: ",
+    "invalidType": "Invalid file type. Only CSV and Excel files are accepted.",
+    "invalidSize": "File exceeds the 10 MB limit.",
+    "processing": "Processing {filename}...",
+    "loadError": "Error loading files",
+    "status": {
+      "pending": "Pending",
+      "processing": "Processing",
+      "ready": "Ready",
+      "error": "Error"
+    },
+    "empty": "You don't have any uploaded files yet",
+    "emptyHint": "Upload your first trading file to start analyzing",
+    "deleteTitle": "Delete file",
+    "deleteConfirm": "Are you sure you want to delete this file?",
+    "deleteSuccess": "File deleted",
+    "deleteError": "Error deleting: ",
+    "trades": "trades",
+    "period": "Period"
+  },
+  "settings": {
+    "title": "Settings",
+    "profile": "Profile",
+    "security": "Security",
+    "plan": "Plan",
+    "dangerZone": "Danger Zone"
+  }
+}
