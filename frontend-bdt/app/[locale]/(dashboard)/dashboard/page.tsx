@@ -17,7 +17,7 @@ export default function DashboardPage() {
   const t = useTranslations("dashboard");
 
   const { data: uploadsData } = useUploads();
-  const uploads = uploadsData?.data ?? [];
+  const uploads = uploadsData?.data?.items ?? [];
   const latestUploadId = uploads.length > 0 ? uploads[0].id : null;
 
   const { data: analyticsData, isLoading: analyticsLoading } = useAnalytics(latestUploadId);

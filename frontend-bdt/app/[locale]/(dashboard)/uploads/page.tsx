@@ -32,7 +32,7 @@ export default function UploadsPage() {
               {t("loadError")}
             </div>
           ) : (
-            <UploadsList uploads={data?.data ?? []} />
+            <UploadsList uploads={data?.data?.items ?? []} />
           )}
         </CardContent>
       </Card>
