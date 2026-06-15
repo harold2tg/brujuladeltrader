@@ -62,7 +62,11 @@
       "notProfitable": "Your system is not profitable yet"
     },
     "aiDiagnostic": "AI Diagnostic",
-    "selectUploadDropdown": "Select file"
+    "selectUploadDropdown": "Select file",
+    "charts": {
+      "equityCurve": "Equity Curve",
+      "sessionPnl": "PnL by Session"
+    }
   },
   "analytics": {
     "title": "Analytics",
@@ -73,15 +77,21 @@
       "summary": "Summary",
       "byHour": "By Hour",
       "byDay": "By Day",
-      "bySession": "By Session",
+      "byWeek": "By Week",
       "byMonth": "By Month",
+      "bySemester": "By Semester",
+      "byYear": "By Year",
+      "bySession": "By Session",
       "distribution": "Distribution"
     },
     "charts": {
       "pnlByHour": "PnL by Hour",
       "winRateByDay": "Win Rate by Day",
+      "weeklyPnl": "Weekly PnL",
       "bySession": "Distribution by Session",
       "monthlyPnl": "Monthly PnL",
+      "semesterPnl": "Semester PnL",
+      "yearlyPnl": "Yearly PnL",
       "distribution": "PnL Distribution"
     }
   },
@@ -111,6 +121,55 @@
     "deleteError": "Error deleting: ",
     "trades": "trades",
     "period": "Period"
+  },
+  "ctrader": {
+    "title": "cTrader Connection",
+    "description": "Connect your cTrader account to sync trades automatically",
+    "connected": "Connected",
+    "notConnected": "Not connected",
+    "connect": "Connect",
+    "disconnect": "Disconnect",
+    "testConnection": "Test Connection",
+    "testing": "Testing...",
+    "connectionSuccess": "Connection successful",
+    "connectionFailed": "Connection failed",
+    "credentials": {
+      "clientId": "Client ID",
+      "clientSecret": "Client Secret",
+      "accessToken": "Access Token",
+      "accountId": "Account ID",
+      "clientIdPlaceholder": "e.g. 30342_xxxxx",
+      "clientSecretPlaceholder": "e.g. hIVK7q1a...",
+      "accessTokenPlaceholder": "e.g. eyJhbGci...",
+      "accountIdPlaceholder": "e.g. 12345678"
+    },
+    "save": "Save Credentials",
+    "saved": "Credentials saved",
+    "saveError": "Error saving credentials",
+    "deleteTitle": "Disconnect cTrader",
+    "deleteConfirm": "Are you sure you want to delete cTrader credentials?",
+    "deleted": "Credentials deleted",
+    "sync": {
+      "title": "Sync Trades",
+      "description": "Choose the period to sync your trades from cTrader",
+      "mode": "Period",
+      "day": "One day",
+      "month": "One month",
+      "year": "One year",
+      "date": "Date",
+      "start": "Sync",
+      "syncing": "Syncing...",
+      "success": "Sync completed",
+      "successDetail": "{count} trades imported",
+      "error": "Sync error",
+      "noCredentials": "Connect your cTrader account first"
+    },
+    "account": {
+      "name": "Account",
+      "broker": "Broker",
+      "demo": "Demo",
+      "live": "Live"
+    }
   },
   "settings": {
     "title": "Settings",

@@ -47,7 +47,10 @@ export function Header() {
   };
 
   return (
-    <header className="flex h-14 items-center justify-between border-b px-4 lg:px-6">
+    <header className="relative flex h-16 items-center justify-between border-b border-border/40 bg-background/60 px-4 backdrop-blur-2xl lg:px-6">
+      {/* Subtle top gradient line */}
+      <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
+
       {/* Left: hamburger + mobile sheet */}
       <div className="flex items-center gap-2">
         <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
@@ -60,7 +63,7 @@ export function Header() {
             <Menu className="size-5" />
             <span className="sr-only">{t("common.openMenu")}</span>
           </Button>
-          <SheetContent side="left" className="w-64 p-0">
+          <SheetContent side="left" className="w-64 border-r-border/40 p-0">
             <SheetTitle className="sr-only">
               {t("nav.dashboard")}
             </SheetTitle>
@@ -70,23 +73,32 @@ export function Header() {
       </div>
 
       {/* Right: language switcher + user dropdown */}
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-3">
         <LanguageSwitcher />
+
+        {/* Separator */}
+        <div className="h-5 w-px bg-border/40" />
 
         <DropdownMenu>
           <DropdownMenuTrigger
             render={
-              <button className="flex items-center gap-2 rounded-full outline-none focus-visible:ring-2 focus-visible:ring-ring" />
+              <button className="group flex items-center gap-2.5 rounded-full outline-none transition-all duration-200 hover:ring-2 hover:ring-primary/20 focus-visible:ring-2 focus-visible:ring-primary" />
             }
           >
-            <Avatar>
-              <AvatarFallback>{initials}</AvatarFallback>
-            </Avatar>
+            <div className="relative">
+              <Avatar className="size-9 ring-2 ring-border/50 transition-all duration-200 group-hover:ring-primary/30">
+                <AvatarFallback className="bg-gradient-to-br from-primary/20 to-primary/5 text-xs font-bold text-primary">
+                  {initials}
+                </AvatarFallback>
+              </Avatar>
+              {/* Online indicator */}
+              <div className="absolute -bottom-0.5 -right-0.5 size-3 rounded-full border-2 border-background bg-emerald-400" />
+            </div>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" sideOffset={8}>
-            <DropdownMenuLabel>
-              <div className="flex flex-col">
-                <span className="text-sm font-medium">{user?.name}</span>
+          <DropdownMenuContent align="end" sideOffset={8} className="w-60 overflow-hidden">
+            <DropdownMenuLabel className="pb-3">
+              <div className="flex flex-col gap-1">
+                <span className="text-sm font-bold">{user?.name}</span>
                 <span className="text-xs text-muted-foreground">
                   {user?.email}
                 </span>

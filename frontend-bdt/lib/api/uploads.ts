@@ -17,7 +17,12 @@ export interface Upload {
 
 export interface UploadListResponse {
   success: boolean;
-  data: Upload[];
+  data: {
+    items: Upload[];
+    total: number;
+    page: number;
+    limit: number;
+  };
 }
 
 export interface UploadDetailResponse {

@@ -15,6 +15,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { CHART_COLORS } from "@/lib/utils/colors";
 import { formatPercent } from "@/lib/utils/formatters";
+import { CHART_TOOLTIP_STYLE } from "@/lib/utils/chartStyles";
 import type { DayMetrics } from "@/lib/api/analytics";
 
 interface WinRateByDayChartProps {
@@ -76,11 +77,7 @@ export function WinRateByDayChart({ data, loading }: WinRateByDayChartProps) {
             />
             <Tooltip
               formatter={(value) => [formatPercent(Number(value)), "Win Rate"]}
-              contentStyle={{
-                backgroundColor: "hsl(var(--card))",
-                border: "1px solid hsl(var(--border))",
-                borderRadius: "8px",
-              }}
+              {...CHART_TOOLTIP_STYLE}
             />
             <Bar dataKey="win_rate" radius={[4, 4, 0, 0]}>
               {chartData.map((entry, index) => (

@@ -15,6 +15,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { CHART_COLORS } from "@/lib/utils/colors";
 import { formatCurrency } from "@/lib/utils/formatters";
+import { CHART_TOOLTIP_STYLE } from "@/lib/utils/chartStyles";
 import type { HourMetrics } from "@/lib/api/analytics";
 
 interface PnlByHourChartProps {
@@ -75,11 +76,7 @@ export function PnlByHourChart({ data, loading }: PnlByHourChartProps) {
             />
             <Tooltip
               formatter={(value) => [formatCurrency(Number(value)), "PnL"]}
-              contentStyle={{
-                backgroundColor: "hsl(var(--card))",
-                border: "1px solid hsl(var(--border))",
-                borderRadius: "8px",
-              }}
+              {...CHART_TOOLTIP_STYLE}
             />
             <Bar dataKey="net_pnl" radius={[4, 4, 0, 0]}>
               {chartData.map((entry, index) => (

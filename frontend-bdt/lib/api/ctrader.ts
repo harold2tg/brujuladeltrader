@@ -9,6 +9,7 @@ export interface CtraderCredentials {
   account_name?: string;
   broker_name?: string;
   is_demo: boolean;
+  has_credentials: boolean;
 }
 
 export interface TestConnectionResult {
@@ -26,6 +27,7 @@ export interface SyncStatus {
   status: string;
   progress_pct?: number;
   trades_imported?: number;
+  error?: string;
 }
 
 // ---------------------------------------------------------------------------
@@ -45,11 +47,11 @@ export async function saveCredentials(data: {
   return response.data;
 }
 
-export async function getCredentials(): Promise<CtraderCredentials[]> {
-  const response = await apiClient.get<{ data: CtraderCredentials[] }>(
+export async function getCredentials(): Promise<CtraderCredentials | null> {
+  const response = await apiClient.get<{ data: CtraderCredentials | null }>(
     "/ctrader/credentials",
   );
-  return response.data.data ?? [];
+  return response.data.data ?? null;
 }
 
 export async function testConnection(): Promise<TestConnectionResult> {

@@ -14,6 +14,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { CHART_COLORS } from "@/lib/utils/colors";
+import { CHART_TOOLTIP_STYLE } from "@/lib/utils/chartStyles";
 import type { DistributionBin } from "@/lib/api/analytics";
 
 interface DistributionChartProps {
@@ -74,11 +75,7 @@ export function DistributionChart({ data, loading }: DistributionChartProps) {
             />
             <Tooltip
               formatter={(value) => [String(value), "Trades"]}
-              contentStyle={{
-                backgroundColor: "hsl(var(--card))",
-                border: "1px solid hsl(var(--border))",
-                borderRadius: "8px",
-              }}
+              {...CHART_TOOLTIP_STYLE}
             />
             <Bar dataKey="count" radius={[4, 4, 0, 0]}>
               {chartData.map((entry, index) => (

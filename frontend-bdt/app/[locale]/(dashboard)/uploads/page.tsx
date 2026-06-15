@@ -23,7 +23,7 @@ export default function UploadsPage() {
 
       <UploadDropzone />
 
-      <Card>
+      <Card className="border-border/40">
         <CardContent>
           {isLoading ? (
             <LoadingSpinner className="py-12" />

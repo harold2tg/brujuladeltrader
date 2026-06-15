@@ -13,6 +13,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { CHART_COLORS } from "@/lib/utils/colors";
 import { formatCurrency } from "@/lib/utils/formatters";
+import { CHART_TOOLTIP_STYLE } from "@/lib/utils/chartStyles";
 import type { SessionMetrics } from "@/lib/api/analytics";
 
 interface SessionPieChartProps {
@@ -83,11 +84,7 @@ export function SessionPieChart({ data, loading }: SessionPieChartProps) {
                 formatCurrency(Number(value)),
                 String(name),
               ]}
-              contentStyle={{
-                backgroundColor: "hsl(var(--card))",
-                border: "1px solid hsl(var(--border))",
-                borderRadius: "8px",
-              }}
+              {...CHART_TOOLTIP_STYLE}
             />
             <Legend />
           </PieChart>
