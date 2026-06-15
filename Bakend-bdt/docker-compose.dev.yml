@@ -7,7 +7,7 @@ services:
       dockerfile: docker/Dockerfile.dev
     container_name: brujula_api_dev
     ports:
-      - "8000:8000"
+      - "8001:8000"
     volumes:
       - .:/app
       - /app/.venv
@@ -49,7 +49,7 @@ services:
     image: postgres:15-alpine
     container_name: brujula_db_dev
     ports:
-      - "5432:5432"
+      - "5433:5432"
     environment:
       POSTGRES_DB: brujula_db
       POSTGRES_USER: brujula

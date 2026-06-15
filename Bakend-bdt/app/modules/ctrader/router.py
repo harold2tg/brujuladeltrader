@@ -18,6 +18,36 @@ from app.modules.ctrader.service import CtraderService
 router = APIRouter(prefix="/ctrader", tags=["ctrader"])
 
 
+@router.get("/credentials")
+async def get_credentials(
+    current_user: User = Depends(get_current_active_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Get current user's cTrader credentials (masked)."""
+    from sqlalchemy import select
+    from app.modules.ctrader.models import CtraderCredentials
+
+    result = await db.execute(
+        select(CtraderCredentials).where(
+            CtraderCredentials.user_id == current_user.id
+        )
+    )
+    creds = result.scalar_one_or_none()
+
+    if not creds:
+        return {"data": None}
+
+    return {
+        "data": {
+            "id": str(creds.id),
+            "account_name": creds.account_name,
+            "broker_name": creds.broker_name,
+            "is_demo": creds.is_demo,
+            "has_credentials": True,
+        }
+    }
+
+
 @router.post("/credentials", response_model=CredentialsResponse)
 async def store_credentials(
     data: CredentialsCreate,

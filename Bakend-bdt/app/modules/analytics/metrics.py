@@ -352,6 +352,99 @@ def calculate_streaks(df: pd.DataFrame) -> dict:
     }
 
 
+def calculate_by_week(df: pd.DataFrame, threshold: int = 5) -> list[dict]:
+    """Calculate metrics by week of year. Weeks with < threshold trades are excluded."""
+    if df.empty or "week_of_year" not in df.columns:
+        return []
+
+    result = []
+    for week in sorted(df["week_of_year"].unique()):
+        week_df = df[df["week_of_year"] == week]
+        if len(week_df) < threshold:
+            continue
+
+        wins = len(week_df[week_df["net_pnl"] > 0])
+        losses = len(week_df[week_df["net_pnl"] <= 0])
+        total = len(week_df)
+
+        result.append({
+            "week": int(week),
+            "label": f"S{int(week):02d}",
+            "trades": total,
+            "wins": wins,
+            "losses": losses,
+            "win_rate": round(wins / total, 4) if total > 0 else 0.0,
+            "net_pnl": round(float(week_df["net_pnl"].sum()), 2),
+            "avg_pnl": round(float(week_df["net_pnl"].mean()), 2),
+        })
+
+    return result
+
+
+def calculate_by_semester(df: pd.DataFrame) -> list[dict]:
+    """Calculate metrics by semester (H1/H2)."""
+    if df.empty or "month" not in df.columns:
+        return []
+
+    result = []
+    for semester in [1, 2]:
+        if semester == 1:
+            sem_df = df[df["month"] <= 6]
+            label = "H1 (Ene-Jun)"
+        else:
+            sem_df = df[df["month"] > 6]
+            label = "H2 (Jul-Dic)"
+
+        if sem_df.empty:
+            continue
+
+        wins = len(sem_df[sem_df["net_pnl"] > 0])
+        losses = len(sem_df[sem_df["net_pnl"] <= 0])
+        total = len(sem_df)
+
+        result.append({
+            "semester": semester,
+            "label": label,
+            "trades": total,
+            "wins": wins,
+            "losses": losses,
+            "win_rate": round(wins / total, 4) if total > 0 else 0.0,
+            "net_pnl": round(float(sem_df["net_pnl"].sum()), 2),
+            "avg_pnl": round(float(sem_df["net_pnl"].mean()), 2),
+        })
+
+    return result
+
+
+def calculate_by_year(df: pd.DataFrame, threshold: int = 5) -> list[dict]:
+    """Calculate metrics by year. Years with < threshold trades are excluded."""
+    if df.empty or "year" not in df.columns:
+        return []
+
+    result = []
+    for year in sorted(df["year"].unique()):
+        year_df = df[df["year"] == year]
+        if len(year_df) < threshold:
+            continue
+
+        wins = len(year_df[year_df["net_pnl"] > 0])
+        losses = len(year_df[year_df["net_pnl"] <= 0])
+        total = len(year_df)
+
+        result.append({
+            "year": int(year),
+            "label": str(int(year)),
+            "trades": total,
+            "wins": wins,
+            "losses": losses,
+            "win_rate": round(wins / total, 4) if total > 0 else 0.0,
+            "net_pnl": round(float(year_df["net_pnl"].sum()), 2),
+            "avg_pnl": round(float(year_df["net_pnl"].mean()), 2),
+        })
+
+    return result
+
+
 def calculate_simulations(df: pd.DataFrame) -> dict:
     """Calculate what-if simulation results."""
     if df.empty:

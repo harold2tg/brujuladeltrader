@@ -16,7 +16,10 @@ from app.modules.analytics.metrics import (
     calculate_by_direction,
     calculate_by_hour,
     calculate_by_month,
+    calculate_by_semester,
     calculate_by_session,
+    calculate_by_week,
+    calculate_by_year,
     calculate_distribution,
     calculate_global_metrics,
     calculate_simulations,
@@ -89,7 +92,9 @@ class AnalyticsService:
                 "net_pnl": float(t.net_pnl),
                 "hour_of_day": t.hour_of_day,
                 "day_of_week": t.day_of_week,
+                "week_of_year": t.week_of_year,
                 "month": t.month,
+                "year": t.year,
                 "session": t.session,
                 "direction": t.direction,
                 "balance": float(t.balance) if t.balance else 0.0,
@@ -180,6 +185,48 @@ class AnalyticsService:
         await self.set_cached(cache_key, metrics)
         return metrics
 
+    async def get_by_week(self, upload_id: str, user_id: str) -> list[dict]:
+        """Get weekly breakdown."""
+        cache_key = self._cache_key(user_id, upload_id, "by-week")
+        cached = await self.get_cached(cache_key)
+        if cached:
+            return cached
+
+        await self.get_upload_or_404(upload_id, user_id)
+        df = await self._get_trades_df(upload_id)
+        metrics = calculate_by_week(df)
+
+        await self.set_cached(cache_key, metrics)
+        return metrics
+
+    async def get_by_semester(self, upload_id: str, user_id: str) -> list[dict]:
+        """Get semester breakdown."""
+        cache_key = self._cache_key(user_id, upload_id, "by-semester")
+        cached = await self.get_cached(cache_key)
+        if cached:
+            return cached
+
+        await self.get_upload_or_404(upload_id, user_id)
+        df = await self._get_trades_df(upload_id)
+        metrics = calculate_by_semester(df)
+
+        await self.set_cached(cache_key, metrics)
+        return metrics
+
+    async def get_by_year(self, upload_id: str, user_id: str) -> list[dict]:
+        """Get yearly breakdown."""
+        cache_key = self._cache_key(user_id, upload_id, "by-year")
+        cached = await self.get_cached(cache_key)
+        if cached:
+            return cached
+
+        await self.get_upload_or_404(upload_id, user_id)
+        df = await self._get_trades_df(upload_id)
+        metrics = calculate_by_year(df)
+
+        await self.set_cached(cache_key, metrics)
+        return metrics
+
     async def get_by_session(self, upload_id: str, user_id: str) -> list[dict]:
         """Get session breakdown."""
         cache_key = self._cache_key(user_id, upload_id, "by-session")
@@ -235,6 +282,55 @@ class AnalyticsService:
 
         await self.set_cached(cache_key, metrics)
         return metrics
+
+    async def get_equity_curve(self, upload_id: str, user_id: str) -> list:
+        """Get equity curve data (balance per trade, sorted chronologically)."""
+        cache_key = self._cache_key(user_id, upload_id, "equity_curve")
+        cached = await self.get_cached(cache_key)
+        if cached:
+            return cached
+
+        await self.get_upload_or_404(upload_id, user_id)
+        df = await self._get_trades_df(upload_id)
+
+        if df.empty:
+            return []
+
+        # Sort by closed_at to ensure chronological order
+        from sqlalchemy import select, asc
+        from app.modules.parser.models import Trade
+
+        result = await self.db.execute(
+            select(Trade)
+            .where(Trade.upload_id == uuid.UUID(upload_id))
+            .order_by(asc(Trade.closed_at))
+        )
+        trades = result.scalars().all()
+
+        month_map = {
+            1: "Ene", 2: "Feb", 3: "Mar", 4: "Abr", 5: "May", 6: "Jun",
+            7: "Jul", 8: "Ago", 9: "Sep", 10: "Oct", 11: "Nov", 12: "Dic",
+        }
+
+        # Return balance per trade with month/year labels
+        curve = []
+        prev_ym = None
+        for idx, t in enumerate(trades):
+            ym = f"{t.year}-{t.month:02d}"
+            # Show month label only at month boundaries (first trade of each month)
+            label = ""
+            if ym != prev_ym:
+                label = f"{month_map.get(t.month, '?')} {t.year}"
+            prev_ym = ym
+            curve.append({
+                "trade_number": idx + 1,
+                "balance": round(float(t.balance) if t.balance else 0.0, 2),
+                "net_pnl": round(float(t.net_pnl), 2),
+                "label": label,
+            })
+
+        await self.set_cached(cache_key, curve)
+        return curve
 
     async def compare_uploads(self, upload_id_a: str, upload_id_b: str, user_id: str) -> dict:
         """Compare two uploads side-by-side with deltas."""

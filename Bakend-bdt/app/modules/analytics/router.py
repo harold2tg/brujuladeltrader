@@ -108,6 +108,48 @@ async def get_by_month(
     return {"success": True, "data": result}
 
 
+@router.get("/{upload_id}/by-week")
+async def get_by_week(
+    upload_id: str,
+    current_user: User = Depends(get_current_active_user),
+    db: AsyncSession = Depends(get_db),
+    redis_client: redis.Redis = Depends(get_redis),
+):
+    """Get weekly breakdown."""
+    service = AnalyticsService(db, redis_client)
+    result = await service.get_by_week(upload_id, str(current_user.id))
+
+    return {"success": True, "data": result}
+
+
+@router.get("/{upload_id}/by-semester")
+async def get_by_semester(
+    upload_id: str,
+    current_user: User = Depends(get_current_active_user),
+    db: AsyncSession = Depends(get_db),
+    redis_client: redis.Redis = Depends(get_redis),
+):
+    """Get semester breakdown."""
+    service = AnalyticsService(db, redis_client)
+    result = await service.get_by_semester(upload_id, str(current_user.id))
+
+    return {"success": True, "data": result}
+
+
+@router.get("/{upload_id}/by-year")
+async def get_by_year(
+    upload_id: str,
+    current_user: User = Depends(get_current_active_user),
+    db: AsyncSession = Depends(get_db),
+    redis_client: redis.Redis = Depends(get_redis),
+):
+    """Get yearly breakdown."""
+    service = AnalyticsService(db, redis_client)
+    result = await service.get_by_year(upload_id, str(current_user.id))
+
+    return {"success": True, "data": result}
+
+
 @router.get("/{upload_id}/by-session")
 async def get_by_session(
     upload_id: str,
@@ -160,5 +202,19 @@ async def get_simulations(
     """Get simulation results."""
     service = AnalyticsService(db, redis_client)
     result = await service.get_simulations(upload_id, str(current_user.id))
+
+    return {"success": True, "data": result}
+
+
+@router.get("/{upload_id}/equity-curve")
+async def get_equity_curve(
+    upload_id: str,
+    current_user: User = Depends(get_current_active_user),
+    db: AsyncSession = Depends(get_db),
+    redis_client: redis.Redis = Depends(get_redis),
+):
+    """Get equity curve (balance per trade)."""
+    service = AnalyticsService(db, redis_client)
+    result = await service.get_equity_curve(upload_id, str(current_user.id))
 
     return {"success": True, "data": result}

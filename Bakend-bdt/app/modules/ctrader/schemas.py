@@ -10,7 +10,8 @@ class CredentialsCreate(BaseModel):
     client_id: str
     client_secret: str
     access_token: str
-    account_id: str
+    account_id: str  # Can be numeric ID or email — auto-discovered if not numeric
+    is_demo: bool = False  # False = LIVE, True = DEMO
 
 
 class CredentialsResponse(BaseModel):
