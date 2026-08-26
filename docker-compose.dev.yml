@@ -1,0 +1,142 @@
+name: brujula
+
+services:
+  # ── Backend API ──────────────────────────────────────────────
+  api:
+    build:
+      context: ./Bakend-bdt
+      dockerfile: docker/Dockerfile.dev
+    container_name: brujula_api
+    ports:
+      - "8001:8000"
+    volumes:
+      - ./Bakend-bdt:/app
+      - api_venv:/app/.venv
+    env_file:
+      - ./Bakend-bdt/.env
+    environment:
+      - APP_ENV=development
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+    networks:
+      - brujula_net
+
+  # ── Backend Tests ────────────────────────────────────────────
+  test:
+    build:
+      context: ./Bakend-bdt
+      dockerfile: docker/Dockerfile.dev
+    container_name: brujula_test
+    volumes:
+      - ./Bakend-bdt:/app
+      - api_venv:/app/.venv
+    env_file:
+      - ./Bakend-bdt/.env.test
+    environment:
+      - APP_ENV=testing
+    depends_on:
+      db-test:
+        condition: service_healthy
+      redis-test:
+        condition: service_started
+    command: pytest tests/ -v --tb=short
+    profiles:
+      - test
+    networks:
+      - brujula_net
+
+  # ── Frontend ─────────────────────────────────────────────────
+  web:
+    build:
+      context: ./frontend-bdt
+      dockerfile: Dockerfile.dev
+    container_name: brujula_web
+    ports:
+      - "3001:3000"
+    volumes:
+      - ./frontend-bdt:/app
+      - /app/node_modules
+      - /app/.next
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:8001
+      - NEXT_PUBLIC_APP_NAME=La Brújula del Trader
+      - NEXT_PUBLIC_DEFAULT_LOCALE=es
+    tty: true
+    stdin_open: true
+    networks:
+      - brujula_net
+
+  # ── PostgreSQL (dev) ─────────────────────────────────────────
+  db:
+    image: postgres:15-alpine
+    container_name: brujula_db
+    ports:
+      - "5433:5432"
+    env_file:
+      - .env.docker
+    environment:
+      POSTGRES_DB: brujula_db
+      POSTGRES_USER: brujula
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U brujula -d brujula_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - brujula_net
+
+  # ── PostgreSQL (test) ────────────────────────────────────────
+  db-test:
+    image: postgres:15-alpine
+    container_name: brujula_db_test
+    env_file:
+      - .env.docker
+    environment:
+      POSTGRES_DB: brujula_test_db
+      POSTGRES_USER: brujula
+    tmpfs:
+      - /var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U brujula -d brujula_test_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    profiles:
+      - test
+    networks:
+      - brujula_net
+
+  # ── Redis (dev) ──────────────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    container_name: brujula_redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - brujula_net
+
+  # ── Redis (test) ─────────────────────────────────────────────
+  redis-test:
+    image: redis:7-alpine
+    container_name: brujula_redis_test
+    profiles:
+      - test
+    networks:
+      - brujula_net
+
+networks:
+  brujula_net:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  redis_data:
+  api_venv:
