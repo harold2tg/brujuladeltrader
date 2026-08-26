@@ -476,4 +476,11 @@ brujuladeltrader/
 
 ## Licencia
 
-Hecho con ❤️ para traders que quieren mejorar su estrategia.
+Este proyecto está bajo la licencia [Apache License 2.0](LICENSE).
+
+Puedes usar, modificar y distribuir este software libremente, incluyendo uso comercial, siempre que:
+- Mantengas el aviso de copyright
+- Indiques los cambios que hiciste
+- Incluyas la licencia completa
+
+Ver [LICENSE](LICENSE) para detalles.
