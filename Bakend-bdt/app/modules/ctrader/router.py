@@ -26,7 +26,7 @@ from app.modules.ctrader.service import CtraderService
 router = APIRouter(prefix="/ctrader", tags=["ctrader"])
 logger = logging.getLogger(__name__)
 
-CTRADER_AUTH_URL = "https://openapi.ctrader.com/apps/authorize"
+CTRADER_AUTH_URL = "https://id.ctrader.com/my/settings/openapi/grantingaccess/"
 FRONTEND_URL = "http://localhost:3001"
 
 
@@ -253,7 +253,7 @@ async def get_credentials(
     creds = result.scalar_one_or_none()
 
     if not creds:
-        return {"data": None}
+        return {"data": {"has_credentials": False}}
 
     return {
         "data": {
