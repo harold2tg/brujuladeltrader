@@ -12,14 +12,14 @@ from fastapi.responses import StreamingResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.modules.analytics.service import AnalyticsService
+from app.modules.data_sources.models import DataSource
 from app.modules.reports.insights import InsightGenerator
 from app.modules.reports.schemas import (
+    DataSourceInfo,
     JobStatusData,
     MonthlyReportData,
     PeriodInfo,
-    UploadInfo,
 )
-from app.modules.uploads.models import Upload
 from app.shared.exceptions import NotFoundException, ForbiddenException
 
 logger = logging.getLogger(__name__)
@@ -40,37 +40,41 @@ class ReportsService:
         self.redis = redis_client
         self.analytics = analytics_service
 
-    def _cache_key(self, user_id: str, upload_id: str, report_type: str, **kwargs) -> str:
+    def _cache_key(
+        self, user_id: str, data_source_id: str, report_type: str, **kwargs
+    ) -> str:
         """Generate Redis cache key for reports."""
-        parts = [f"report:{user_id}:{upload_id}:{report_type}"]
+        parts = [f"report:{user_id}:{data_source_id}:{report_type}"]
         for k, v in sorted(kwargs.items()):
             parts.append(f"{k}:{v}")
         return ":".join(parts)
 
-    async def _get_upload_info(self, upload_id: str, user_id: str) -> UploadInfo:
-        """Get upload info, raising 404 if not found."""
-        upload = await self.analytics.get_upload_or_404(upload_id, user_id)
-        return UploadInfo(
-            id=str(upload.id),
-            original_name=upload.original_name,
-            status=upload.status,
-            total_trades=upload.total_trades,
-            date_from=str(upload.date_from) if upload.date_from else None,
-            date_to=str(upload.date_to) if upload.date_to else None,
-            period_label=upload.period_label,
+    async def _get_data_source_info(
+        self, data_source_id: str, user_id: str
+    ) -> DataSourceInfo:
+        """Get data source info, raising 404 if not found."""
+        ds = await self.analytics.get_data_source_or_404(data_source_id, user_id)
+        return DataSourceInfo(
+            id=str(ds.id),
+            name=ds.name,
+            broker=ds.broker,
+            broker_account_id=ds.broker_account_id,
+            trade_count=ds.trade_count,
+            first_trade_at=str(ds.first_trade_at) if ds.first_trade_at else None,
+            last_trade_at=str(ds.last_trade_at) if ds.last_trade_at else None,
         )
 
     async def get_monthly(
         self,
-        upload_id: str,
+        data_source_id: str,
         user_id: str,
         year: int,
         month: int,
         language: str = "es",
     ) -> dict:
-        """Get monthly report for a specific upload."""
+        """Get monthly report for a specific data source."""
         cache_key = self._cache_key(
-            user_id, upload_id, "monthly", year=year, month=month, lang=language
+            user_id, data_source_id, "monthly", year=year, month=month, lang=language
         )
 
         # Check cache
@@ -82,7 +86,7 @@ class ReportsService:
             logger.warning("Redis cache read failed")
 
         # Get metrics from analytics
-        metrics = await self.analytics.get_full_metrics(upload_id, user_id)
+        metrics = await self.analytics.get_full_metrics(data_source_id, user_id)
         global_metrics = metrics.get("global", {})
 
         # Generate insights
@@ -91,10 +95,10 @@ class ReportsService:
         # Build summary text
         summary = self._build_monthly_summary(global_metrics, language)
 
-        upload_info = await self._get_upload_info(upload_id, user_id)
+        ds_info = await self._get_data_source_info(data_source_id, user_id)
 
         result = {
-            "upload_info": upload_info.model_dump(),
+            "data_source_info": ds_info.model_dump(),
             "period": PeriodInfo(
                 year=year, month=month, label=f"{year}-{month:02d}"
             ).model_dump(),
@@ -113,14 +117,14 @@ class ReportsService:
 
     async def get_annual(
         self,
-        upload_id: str,
+        data_source_id: str,
         user_id: str,
         year: int,
         language: str = "es",
     ) -> dict:
-        """Get annual report for a specific upload."""
+        """Get annual report for a specific data source."""
         cache_key = self._cache_key(
-            user_id, upload_id, "annual", year=year, lang=language
+            user_id, data_source_id, "annual", year=year, lang=language
         )
 
         # Check cache
@@ -132,17 +136,17 @@ class ReportsService:
             logger.warning("Redis cache read failed")
 
         # Get all metrics
-        metrics = await self.analytics.get_full_metrics(upload_id, user_id)
+        metrics = await self.analytics.get_full_metrics(data_source_id, user_id)
         global_metrics = metrics.get("global", {})
         by_month = metrics.get("by_month", [])
 
         # Generate insights
         insights = InsightGenerator.annual_insights(global_metrics, language)
 
-        upload_info = await self._get_upload_info(upload_id, user_id)
+        ds_info = await self._get_data_source_info(data_source_id, user_id)
 
         result = {
-            "upload_info": upload_info.model_dump(),
+            "data_source_info": ds_info.model_dump(),
             "period": PeriodInfo(year=year, label=str(year)).model_dump(),
             "monthly_breakdown": by_month,
             "annual_summary": global_metrics,
@@ -159,7 +163,7 @@ class ReportsService:
 
     async def export_csv(
         self,
-        upload_id: str,
+        data_source_id: str,
         user_id: str,
         year: int,
         month: int | None = None,
@@ -170,7 +174,7 @@ class ReportsService:
         await self._check_pro_plan(user_id)
 
         # Get full metrics
-        metrics = await self.analytics.get_full_metrics(upload_id, user_id)
+        metrics = await self.analytics.get_full_metrics(data_source_id, user_id)
         global_metrics = metrics.get("global", {})
         by_hour = metrics.get("by_hour", [])
         by_session = metrics.get("by_session", [])
@@ -232,7 +236,7 @@ class ReportsService:
 
     async def generate_pdf_task(
         self,
-        upload_id: str,
+        data_source_id: str,
         user_id: str,
         year: int,
         month: int | None = None,
@@ -246,7 +250,7 @@ class ReportsService:
         # Store job status in Redis
         job_data = {
             "status": "processing",
-            "upload_id": upload_id,
+            "data_source_id": data_source_id,
             "user_id": user_id,
             "year": year,
             "month": month,
@@ -267,14 +271,16 @@ class ReportsService:
 
             celery_app.send_task(
                 "app.modules.reports.tasks.generate_report_pdf",
-                args=[job_id, upload_id, user_id, year, month, language],
+                args=[job_id, data_source_id, user_id, year, month, language],
             )
         except ImportError:
             # Celery not available — run inline (sync fallback)
             logger.warning("Celery not available, running PDF generation inline")
             import asyncio
             asyncio.create_task(
-                self._generate_pdf_inline(job_id, upload_id, user_id, year, month, language)
+                self._generate_pdf_inline(
+                    job_id, data_source_id, user_id, year, month, language
+                )
             )
 
         return job_id
@@ -282,7 +288,7 @@ class ReportsService:
     async def _generate_pdf_inline(
         self,
         job_id: str,
-        upload_id: str,
+        data_source_id: str,
         user_id: str,
         year: int,
         month: int | None,
@@ -292,7 +298,9 @@ class ReportsService:
         try:
             from app.modules.reports.tasks import generate_report_pdf_sync
 
-            generate_report_pdf_sync(job_id, upload_id, user_id, year, month, language)
+            generate_report_pdf_sync(
+                job_id, data_source_id, user_id, year, month, language
+            )
         except Exception as e:
             logger.error("PDF generation failed: %s", e)
             # Update job status to failed

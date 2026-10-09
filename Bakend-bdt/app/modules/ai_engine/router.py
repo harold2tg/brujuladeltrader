@@ -102,9 +102,9 @@ async def test_credentials(
 # ─── Analysis endpoints ─────────────────────────────────────────────────
 
 
-@router.post("/{upload_id}/analyze", response_model=AnalyzeResponse)
+@router.post("/{data_source_id}/analyze", response_model=AnalyzeResponse)
 async def start_analysis(
-    upload_id: str,
+    data_source_id: str,
     data: AnalyzeRequest,
     current_user: User = Depends(get_current_active_user),
     service: AiService = Depends(get_ai_service),
@@ -112,7 +112,7 @@ async def start_analysis(
     """Start an AI analysis job (async via Celery)."""
     result = await service.start_analysis(
         str(current_user.id),
-        upload_id,
+        data_source_id,
         data.analysis_type,
         data.language,
     )
@@ -130,14 +130,14 @@ async def get_job_status(
     return success_response(result)
 
 
-@router.get("/{upload_id}/insights")
+@router.get("/{data_source_id}/insights")
 async def get_insights(
-    upload_id: str,
+    data_source_id: str,
     current_user: User = Depends(get_current_active_user),
     service: AiService = Depends(get_ai_service),
 ):
-    """Get cached AI insights for an upload."""
-    result = await service.get_cached_insights(upload_id)
+    """Get cached AI insights for a data source."""
+    result = await service.get_cached_insights(data_source_id)
     return success_response(result)
 
 

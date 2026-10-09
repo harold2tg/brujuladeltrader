@@ -33,18 +33,18 @@ def get_reports_service(
     return ReportsService(db, redis_client, analytics_service)
 
 
-@router.get("/{upload_id}/monthly")
+@router.get("/{data_source_id}/monthly")
 async def get_monthly_report(
-    upload_id: str,
+    data_source_id: str,
     year: int = Query(..., description="Report year"),
     month: int = Query(..., ge=1, le=12, description="Report month"),
     language: str = Query("es", pattern="^(es|en)$"),
     current_user: User = Depends(get_current_active_user),
     service: ReportsService = Depends(get_reports_service),
 ):
-    """Get monthly report for a specific upload."""
+    """Get monthly report for a specific data source."""
     result = await service.get_monthly(
-        upload_id=upload_id,
+        data_source_id=data_source_id,
         user_id=str(current_user.id),
         year=year,
         month=month,
@@ -53,17 +53,17 @@ async def get_monthly_report(
     return success_response(result)
 
 
-@router.get("/{upload_id}/annual")
+@router.get("/{data_source_id}/annual")
 async def get_annual_report(
-    upload_id: str,
+    data_source_id: str,
     year: int = Query(..., description="Report year"),
     language: str = Query("es", pattern="^(es|en)$"),
     current_user: User = Depends(get_current_active_user),
     service: ReportsService = Depends(get_reports_service),
 ):
-    """Get annual report for a specific upload."""
+    """Get annual report for a specific data source."""
     result = await service.get_annual(
-        upload_id=upload_id,
+        data_source_id=data_source_id,
         user_id=str(current_user.id),
         year=year,
         language=language,
@@ -71,16 +71,16 @@ async def get_annual_report(
     return success_response(result)
 
 
-@router.post("/{upload_id}/export/pdf")
+@router.post("/{data_source_id}/export/pdf")
 async def export_pdf(
-    upload_id: str,
+    data_source_id: str,
     body: ExportRequest,
     current_user: User = Depends(get_current_active_user),
     service: ReportsService = Depends(get_reports_service),
 ):
     """Export report as PDF (async, Pro-only)."""
     job_id = await service.generate_pdf_task(
-        upload_id=upload_id,
+        data_source_id=data_source_id,
         user_id=str(current_user.id),
         year=body.year,
         month=body.month,
@@ -103,9 +103,9 @@ async def get_job_status(
     return success_response(result)
 
 
-@router.get("/{upload_id}/export/csv")
+@router.get("/{data_source_id}/export/csv")
 async def export_csv(
-    upload_id: str,
+    data_source_id: str,
     year: int = Query(..., description="Report year"),
     month: int = Query(None, ge=1, le=12, description="Report month (optional)"),
     language: str = Query("es", pattern="^(es|en)$"),
@@ -114,7 +114,7 @@ async def export_csv(
 ):
     """Export report as CSV (sync streaming, Pro-only)."""
     return await service.export_csv(
-        upload_id=upload_id,
+        data_source_id=data_source_id,
         user_id=str(current_user.id),
         year=year,
         month=month,

@@ -12,7 +12,7 @@ from app.config import settings
 from app.modules.ctrader.client import CtraderClient, health_check
 from app.modules.ctrader.models import CtraderCredentials
 from app.modules.data_sources.service import DataSourceService
-from app.modules.parser.models import Trade
+from app.modules.data_sources.models import Trade
 from app.shared.trade_utils import calculate_derived_fields
 from app.shared.crypto import decrypt, encrypt, mask_token
 from app.shared.exceptions import BadRequestException, NotFoundException

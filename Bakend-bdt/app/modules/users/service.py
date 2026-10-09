@@ -58,15 +58,14 @@ class UserService:
         await self.db.commit()
 
     async def get_stats(self, user_id: str) -> dict:
-        """Get aggregated user statistics from uploads and trades."""
+        """Get aggregated user statistics from data sources and trades."""
         # Import models locally to avoid circular imports
         try:
-            from app.modules.uploads.models import Upload
-            from app.modules.parser.models import Trade
+            from app.modules.data_sources.models import DataSource, Trade
         except ImportError:
             # Modules not implemented yet - return empty stats
             return {
-                "total_uploads": 0,
+                "total_data_sources": 0,
                 "total_trades": 0,
                 "total_pnl": 0.0,
                 "win_rate": 0.0,
@@ -77,11 +76,11 @@ class UserService:
 
         user_uuid = uuid.UUID(user_id)
 
-        # Total uploads
-        uploads_result = await self.db.execute(
-            select(func.count(Upload.id)).where(Upload.user_id == user_uuid)
+        # Total data sources
+        ds_result = await self.db.execute(
+            select(func.count(DataSource.id)).where(DataSource.user_id == user_uuid)
         )
-        total_uploads = uploads_result.scalar() or 0
+        total_data_sources = ds_result.scalar() or 0
 
         # Total trades
         trades_result = await self.db.execute(
@@ -91,7 +90,7 @@ class UserService:
 
         if total_trades == 0:
             return {
-                "total_uploads": total_uploads,
+                "total_data_sources": total_data_sources,
                 "total_trades": 0,
                 "total_pnl": 0.0,
                 "win_rate": 0.0,
@@ -153,7 +152,7 @@ class UserService:
             worst_month = None
 
         return {
-            "total_uploads": total_uploads,
+            "total_data_sources": total_data_sources,
             "total_trades": total_trades,
             "total_pnl": total_pnl,
             "win_rate": win_rate,

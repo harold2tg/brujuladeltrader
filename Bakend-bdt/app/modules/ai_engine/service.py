@@ -199,7 +199,7 @@ class AiService:
     async def start_analysis(
         self,
         user_id: str,
-        upload_id: str,
+        data_source_id: str,
         analysis_type: str,
         language: str,
     ) -> dict:
@@ -208,7 +208,7 @@ class AiService:
         await self._check_rate_limit(user_id)
 
         # Check cache first
-        cache_key = f"ai:{upload_id}:{analysis_type}:{language}"
+        cache_key = f"ai:{data_source_id}:{analysis_type}:{language}"
         try:
             cached = await self.redis.get(cache_key)
             if cached:
@@ -231,7 +231,7 @@ class AiService:
         # Store job in Redis
         job_data = {
             "status": "processing",
-            "upload_id": upload_id,
+            "data_source_id": data_source_id,
             "user_id": user_id,
             "analysis_type": analysis_type,
             "language": language,
@@ -250,7 +250,7 @@ class AiService:
 
             celery_app.send_task(
                 "app.modules.ai_engine.tasks.run_ai_analysis",
-                args=[job_id, upload_id, user_id, analysis_type, language],
+                args=[job_id, data_source_id, user_id, analysis_type, language],
             )
         except ImportError:
             # Celery not available — run inline via InsightGenerator
@@ -259,7 +259,7 @@ class AiService:
 
             asyncio.create_task(
                 self._run_analysis_inline(
-                    job_id, upload_id, user_id, analysis_type, language
+                    job_id, data_source_id, user_id, analysis_type, language
                 )
             )
 
@@ -276,11 +276,11 @@ class AiService:
 
         return {"status": "not_found"}
 
-    async def get_cached_insights(self, upload_id: str) -> dict:
-        """Get cached AI insights for an upload."""
+    async def get_cached_insights(self, data_source_id: str) -> dict:
+        """Get cached AI insights for a data source."""
         # Check multiple analysis types
         for analysis_type in ["full_diagnosis", "monthly_review", "quick_summary"]:
-            cache_key = f"ai:{upload_id}:{analysis_type}:es"
+            cache_key = f"ai:{data_source_id}:{analysis_type}:es"
             try:
                 cached = await self.redis.get(cache_key)
                 if cached:
@@ -437,7 +437,7 @@ class AiService:
     async def _run_analysis_inline(
         self,
         job_id: str,
-        upload_id: str,
+        data_source_id: str,
         user_id: str,
         analysis_type: str,
         language: str,
@@ -450,7 +450,7 @@ class AiService:
             from app.modules.analytics.service import AnalyticsService
 
             analytics = AnalyticsService(self.db, self.redis)
-            metrics = await analytics.get_full_metrics(upload_id, user_id)
+            metrics = await analytics.get_full_metrics(data_source_id, user_id)
             global_metrics = metrics.get("global", {})
 
             # Generate deterministic insights as fallback
@@ -464,7 +464,7 @@ class AiService:
             }
 
             # Cache result
-            cache_key = f"ai:{upload_id}:{analysis_type}:{language}"
+            cache_key = f"ai:{data_source_id}:{analysis_type}:{language}"
             try:
                 await self.redis.setex(cache_key, CACHE_TTL, json.dumps(result))
             except Exception:

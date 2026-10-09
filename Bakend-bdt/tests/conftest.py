@@ -16,7 +16,7 @@ from app.database import Base, get_db
 from app.main import app
 from app.modules.auth.models import User
 from app.modules.auth.service import hash_password
-from app.modules.parser.models import Trade
+from app.modules.data_sources.models import Trade
 
 # Test engine and session factory (uses Docker services)
 test_engine = create_async_engine(settings.DATABASE_URL, echo=True)

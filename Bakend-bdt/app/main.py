@@ -9,7 +9,6 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.config import settings
 from app.modules.auth.router import router as auth_router
 from app.modules.users.router import router as users_router
-from app.modules.uploads.router import router as uploads_router
 from app.modules.analytics.router import router as analytics_router
 from app.modules.ctrader.router import router as ctrader_router
 from app.modules.reports.router import router as reports_router
@@ -46,7 +45,6 @@ app.add_middleware(
 # Register routers
 app.include_router(auth_router)
 app.include_router(users_router)
-app.include_router(uploads_router)
 app.include_router(analytics_router)
 app.include_router(ctrader_router)
 app.include_router(reports_router)

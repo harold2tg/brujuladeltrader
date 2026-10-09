@@ -162,14 +162,14 @@ class AlertsService:
         self,
         rule_id: str,
         user_id: str,
-        upload_id: str | None,
+        data_source_id: str | None,
         value: Decimal,
     ) -> AlertHistory:
         """Insert an alert_history row."""
         history = AlertHistory(
             rule_id=uuid.UUID(rule_id),
             user_id=uuid.UUID(user_id),
-            upload_id=uuid.UUID(upload_id) if upload_id else None,
+            data_source_id=uuid.UUID(data_source_id) if data_source_id else None,
             triggered_value=value,
         )
         self.db.add(history)
@@ -178,10 +178,12 @@ class AlertsService:
 
     # ── Evaluation ──────────────────────────────────────────────
 
-    async def evaluate_for_upload(self, upload_id: str, user_id: str) -> None:
-        """Evaluate all active rules for a user against upload metrics.
+    async def evaluate_for_data_source(
+        self, data_source_id: str, user_id: str
+    ) -> None:
+        """Evaluate all active rules for a user against data source metrics.
 
-        Called after parser marks an upload as ready.
+        Called after data source sync completes.
         """
         from app.modules.analytics.service import AnalyticsService
 
@@ -200,10 +202,11 @@ class AlertsService:
         # Fetch metrics
         analytics_service = AnalyticsService(self.db, self.redis)
         try:
-            metrics = await analytics_service.get_summary(upload_id, user_id)
+            metrics = await analytics_service.get_summary(data_source_id, user_id)
         except Exception:
             logger.warning(
-                "Failed to fetch metrics for upload %s, skipping alert evaluation", upload_id
+                "Failed to fetch metrics for data source %s, skipping alert evaluation",
+                data_source_id,
             )
             return
 
@@ -224,7 +227,7 @@ class AlertsService:
                 await self._record_alert(
                     rule_id=str(rule.id),
                     user_id=user_id,
-                    upload_id=upload_id,
+                    data_source_id=data_source_id,
                     value=Decimal(str(triggered_value)),
                 )
                 await self._set_dedup(user_id, str(rule.id))

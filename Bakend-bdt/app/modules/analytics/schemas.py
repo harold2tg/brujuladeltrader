@@ -161,9 +161,9 @@ class CompareDelta(BaseModel):
     pass
 
 
-class CompareUpload(BaseModel):
-    """Single upload metrics in comparison."""
-    upload_id: str
+class CompareDataSource(BaseModel):
+    """Single data source metrics in comparison."""
+    data_source_id: str
     metrics: GlobalMetrics
 
 

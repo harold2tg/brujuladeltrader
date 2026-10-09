@@ -73,7 +73,7 @@ class AccountDelete(BaseModel):
 class UserStats(BaseModel):
     """Schema for aggregated user statistics."""
 
-    total_uploads: int
+    total_data_sources: int
     total_trades: int
     total_pnl: float
     win_rate: float

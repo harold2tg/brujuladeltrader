@@ -2,6 +2,7 @@
 
 import json
 import logging
+import uuid as uuid_mod
 
 import redis.asyncio as redis
 
@@ -14,7 +15,7 @@ CACHE_TTL = 86400  # 24 hours
 
 def run_ai_analysis(
     job_id: str,
-    upload_id: str,
+    data_source_id: str,
     user_id: str,
     analysis_type: str,
     language: str,
@@ -66,18 +67,22 @@ def run_ai_analysis(
             )
             credentials = cred_result.scalars().all()
 
-            # Get metrics for the upload
-            from app.modules.parser.models import Trade
+            # Get metrics for the data source
+            from app.modules.data_sources.models import Trade
 
             trade_result = session.execute(
-                select(Trade).where(Trade.upload_id == upload_id)
+                select(Trade).where(
+                    Trade.data_source_id == uuid_mod.UUID(data_source_id)
+                )
             )
             trades = trade_result.scalars().all()
 
         if not credentials:
             # No AI credentials — use deterministic fallback
             logger.info("No AI credentials for user %s, using fallback", user_id)
-            _run_fallback(job_id, upload_id, user_id, analysis_type, language, trades)
+            _run_fallback(
+                job_id, data_source_id, user_id, analysis_type, language, trades
+            )
             return
 
         # Try each active credential
@@ -100,7 +105,7 @@ def run_ai_analysis(
             # Cache result
             try:
                 client = redis.from_url(settings.REDIS_URL, decode_responses=True)
-                cache_key = f"ai:{upload_id}:{analysis_type}:{language}"
+                cache_key = f"ai:{data_source_id}:{analysis_type}:{language}"
                 client.setex(cache_key, CACHE_TTL, json.dumps(result_data))
                 client.close()
             except Exception:
@@ -111,7 +116,9 @@ def run_ai_analysis(
 
         except Exception as e:
             logger.error("AI provider call failed: %s, falling back", e)
-            _run_fallback(job_id, upload_id, user_id, analysis_type, language, trades)
+            _run_fallback(
+                job_id, data_source_id, user_id, analysis_type, language, trades
+            )
 
     except Exception as e:
         logger.error("AI analysis task failed: %s", e)
@@ -120,7 +127,7 @@ def run_ai_analysis(
 
 def _run_fallback(
     job_id: str,
-    upload_id: str,
+    data_source_id: str,
     user_id: str,
     analysis_type: str,
     language: str,
@@ -176,7 +183,7 @@ def _run_fallback(
         # Cache result
         try:
             client = redis.from_url(settings.REDIS_URL, decode_responses=True)
-            cache_key = f"ai:{upload_id}:{analysis_type}:{language}"
+            cache_key = f"ai:{data_source_id}:{analysis_type}:{language}"
             client.setex(cache_key, CACHE_TTL, json.dumps(result_data))
             client.close()
         except Exception:

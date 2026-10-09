@@ -36,7 +36,7 @@ class AlertHistory(Base):
         ForeignKey("alert_rules.id", ondelete="CASCADE"),
         nullable=False,
     )
-    upload_id = Column(UUID(as_uuid=True), ForeignKey("uploads.id", ondelete="SET NULL"), nullable=True, index=True)
+    data_source_id = Column(UUID(as_uuid=True), ForeignKey("data_sources.id", ondelete="SET NULL"), nullable=True, index=True)
     triggered_value = Column(Numeric(10, 2), nullable=False)
     triggered_at = Column(DateTime(timezone=True), nullable=False, server_default=func.now())
 

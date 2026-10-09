@@ -7,7 +7,7 @@ from typing import Any, Callable
 
 import pandas as pd
 import redis.asyncio as redis
-from sqlalchemy import select
+from sqlalchemy import select, asc
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import settings
@@ -25,8 +25,7 @@ from app.modules.analytics.metrics import (
     calculate_simulations,
     calculate_streaks,
 )
-from app.modules.parser.models import Trade
-from app.modules.uploads.models import Upload
+from app.modules.data_sources.models import DataSource, Trade
 from app.shared.exceptions import NotFoundException
 
 logger = logging.getLogger(__name__)
@@ -41,24 +40,24 @@ class AnalyticsService:
         self.db = db
         self.redis = redis_client
 
-    async def get_upload_or_404(self, upload_id: str, user_id: str) -> Upload:
-        """Get upload and verify ownership. Raises 404 if not found or not owned."""
+    async def get_data_source_or_404(self, data_source_id: str, user_id: str) -> DataSource:
+        """Get data source and verify ownership. Raises 404 if not found or not owned."""
         result = await self.db.execute(
-            select(Upload).where(Upload.id == uuid.UUID(upload_id))
+            select(DataSource).where(DataSource.id == uuid.UUID(data_source_id))
         )
-        upload = result.scalar_one_or_none()
+        data_source = result.scalar_one_or_none()
 
-        if not upload:
-            raise NotFoundException("Upload not found")
+        if not data_source:
+            raise NotFoundException("Data source not found")
 
-        if str(upload.user_id) != user_id:
-            raise NotFoundException("Upload not found")
+        if str(data_source.user_id) != user_id:
+            raise NotFoundException("Data source not found")
 
-        return upload
+        return data_source
 
-    def _cache_key(self, user_id: str, upload_id: str, endpoint: str) -> str:
+    def _cache_key(self, user_id: str, data_source_id: str, endpoint: str) -> str:
         """Generate Redis cache key."""
-        return f"analytics:{user_id}:{upload_id}:{endpoint}"
+        return f"analytics:{user_id}:{data_source_id}:{endpoint}"
 
     async def get_cached(self, key: str) -> dict | None:
         """Get cached result from Redis."""
@@ -77,10 +76,10 @@ class AnalyticsService:
         except Exception:
             logger.warning("Redis cache write failed for key: %s", key)
 
-    async def _get_trades_df(self, upload_id: str) -> pd.DataFrame:
+    async def _get_trades_df(self, data_source_id: str) -> pd.DataFrame:
         """Get trades as a pandas DataFrame."""
         result = await self.db.execute(
-            select(Trade).where(Trade.upload_id == uuid.UUID(upload_id))
+            select(Trade).where(Trade.data_source_id == uuid.UUID(data_source_id))
         )
         trades = result.scalars().all()
 
@@ -104,15 +103,15 @@ class AnalyticsService:
         ]
         return pd.DataFrame(data)
 
-    async def get_full_metrics(self, upload_id: str, user_id: str) -> dict:
+    async def get_full_metrics(self, data_source_id: str, user_id: str) -> dict:
         """Get full metrics with all dimensions."""
-        cache_key = self._cache_key(user_id, upload_id, "full")
+        cache_key = self._cache_key(user_id, data_source_id, "full")
         cached = await self.get_cached(cache_key)
         if cached:
             return cached
 
-        await self.get_upload_or_404(upload_id, user_id)
-        df = await self._get_trades_df(upload_id)
+        await self.get_data_source_or_404(data_source_id, user_id)
+        df = await self._get_trades_df(data_source_id)
 
         metrics = {
             "global": calculate_global_metrics(df),
@@ -129,180 +128,176 @@ class AnalyticsService:
         await self.set_cached(cache_key, metrics)
         return metrics
 
-    async def get_summary(self, upload_id: str, user_id: str) -> dict:
+    async def get_summary(self, data_source_id: str, user_id: str) -> dict:
         """Get global metrics only."""
-        cache_key = self._cache_key(user_id, upload_id, "summary")
+        cache_key = self._cache_key(user_id, data_source_id, "summary")
         cached = await self.get_cached(cache_key)
         if cached:
             return cached
 
-        await self.get_upload_or_404(upload_id, user_id)
-        df = await self._get_trades_df(upload_id)
+        await self.get_data_source_or_404(data_source_id, user_id)
+        df = await self._get_trades_df(data_source_id)
         metrics = calculate_global_metrics(df)
 
         await self.set_cached(cache_key, metrics)
         return metrics
 
-    async def get_by_hour(self, upload_id: str, user_id: str) -> list[dict]:
+    async def get_by_hour(self, data_source_id: str, user_id: str) -> list[dict]:
         """Get hourly breakdown."""
-        cache_key = self._cache_key(user_id, upload_id, "by-hour")
+        cache_key = self._cache_key(user_id, data_source_id, "by-hour")
         cached = await self.get_cached(cache_key)
         if cached:
             return cached
 
-        await self.get_upload_or_404(upload_id, user_id)
-        df = await self._get_trades_df(upload_id)
+        await self.get_data_source_or_404(data_source_id, user_id)
+        df = await self._get_trades_df(data_source_id)
         metrics = calculate_by_hour(df)
 
         await self.set_cached(cache_key, metrics)
         return metrics
 
-    async def get_by_day(self, upload_id: str, user_id: str) -> list[dict]:
+    async def get_by_day(self, data_source_id: str, user_id: str) -> list[dict]:
         """Get day of week breakdown."""
-        cache_key = self._cache_key(user_id, upload_id, "by-day")
+        cache_key = self._cache_key(user_id, data_source_id, "by-day")
         cached = await self.get_cached(cache_key)
         if cached:
             return cached
 
-        await self.get_upload_or_404(upload_id, user_id)
-        df = await self._get_trades_df(upload_id)
+        await self.get_data_source_or_404(data_source_id, user_id)
+        df = await self._get_trades_df(data_source_id)
         metrics = calculate_by_day(df)
 
         await self.set_cached(cache_key, metrics)
         return metrics
 
-    async def get_by_month(self, upload_id: str, user_id: str) -> list[dict]:
+    async def get_by_month(self, data_source_id: str, user_id: str) -> list[dict]:
         """Get monthly breakdown."""
-        cache_key = self._cache_key(user_id, upload_id, "by-month")
+        cache_key = self._cache_key(user_id, data_source_id, "by-month")
         cached = await self.get_cached(cache_key)
         if cached:
             return cached
 
-        await self.get_upload_or_404(upload_id, user_id)
-        df = await self._get_trades_df(upload_id)
+        await self.get_data_source_or_404(data_source_id, user_id)
+        df = await self._get_trades_df(data_source_id)
         metrics = calculate_by_month(df)
 
         await self.set_cached(cache_key, metrics)
         return metrics
 
-    async def get_by_week(self, upload_id: str, user_id: str) -> list[dict]:
+    async def get_by_week(self, data_source_id: str, user_id: str) -> list[dict]:
         """Get weekly breakdown."""
-        cache_key = self._cache_key(user_id, upload_id, "by-week")
+        cache_key = self._cache_key(user_id, data_source_id, "by-week")
         cached = await self.get_cached(cache_key)
         if cached:
             return cached
 
-        await self.get_upload_or_404(upload_id, user_id)
-        df = await self._get_trades_df(upload_id)
+        await self.get_data_source_or_404(data_source_id, user_id)
+        df = await self._get_trades_df(data_source_id)
         metrics = calculate_by_week(df)
 
         await self.set_cached(cache_key, metrics)
         return metrics
 
-    async def get_by_semester(self, upload_id: str, user_id: str) -> list[dict]:
+    async def get_by_semester(self, data_source_id: str, user_id: str) -> list[dict]:
         """Get semester breakdown."""
-        cache_key = self._cache_key(user_id, upload_id, "by-semester")
+        cache_key = self._cache_key(user_id, data_source_id, "by-semester")
         cached = await self.get_cached(cache_key)
         if cached:
             return cached
 
-        await self.get_upload_or_404(upload_id, user_id)
-        df = await self._get_trades_df(upload_id)
+        await self.get_data_source_or_404(data_source_id, user_id)
+        df = await self._get_trades_df(data_source_id)
         metrics = calculate_by_semester(df)
 
         await self.set_cached(cache_key, metrics)
         return metrics
 
-    async def get_by_year(self, upload_id: str, user_id: str) -> list[dict]:
+    async def get_by_year(self, data_source_id: str, user_id: str) -> list[dict]:
         """Get yearly breakdown."""
-        cache_key = self._cache_key(user_id, upload_id, "by-year")
+        cache_key = self._cache_key(user_id, data_source_id, "by-year")
         cached = await self.get_cached(cache_key)
         if cached:
             return cached
 
-        await self.get_upload_or_404(upload_id, user_id)
-        df = await self._get_trades_df(upload_id)
+        await self.get_data_source_or_404(data_source_id, user_id)
+        df = await self._get_trades_df(data_source_id)
         metrics = calculate_by_year(df)
 
         await self.set_cached(cache_key, metrics)
         return metrics
 
-    async def get_by_session(self, upload_id: str, user_id: str) -> list[dict]:
+    async def get_by_session(self, data_source_id: str, user_id: str) -> list[dict]:
         """Get session breakdown."""
-        cache_key = self._cache_key(user_id, upload_id, "by-session")
+        cache_key = self._cache_key(user_id, data_source_id, "by-session")
         cached = await self.get_cached(cache_key)
         if cached:
             return cached
 
-        await self.get_upload_or_404(upload_id, user_id)
-        df = await self._get_trades_df(upload_id)
+        await self.get_data_source_or_404(data_source_id, user_id)
+        df = await self._get_trades_df(data_source_id)
         metrics = calculate_by_session(df)
 
         await self.set_cached(cache_key, metrics)
         return metrics
 
-    async def get_streaks(self, upload_id: str, user_id: str) -> dict:
+    async def get_streaks(self, data_source_id: str, user_id: str) -> dict:
         """Get streak data."""
-        cache_key = self._cache_key(user_id, upload_id, "streaks")
+        cache_key = self._cache_key(user_id, data_source_id, "streaks")
         cached = await self.get_cached(cache_key)
         if cached:
             return cached
 
-        await self.get_upload_or_404(upload_id, user_id)
-        df = await self._get_trades_df(upload_id)
+        await self.get_data_source_or_404(data_source_id, user_id)
+        df = await self._get_trades_df(data_source_id)
         metrics = calculate_streaks(df)
 
         await self.set_cached(cache_key, metrics)
         return metrics
 
-    async def get_distribution(self, upload_id: str, user_id: str) -> list[dict]:
+    async def get_distribution(self, data_source_id: str, user_id: str) -> list[dict]:
         """Get distribution buckets."""
-        cache_key = self._cache_key(user_id, upload_id, "distribution")
+        cache_key = self._cache_key(user_id, data_source_id, "distribution")
         cached = await self.get_cached(cache_key)
         if cached:
             return cached
 
-        await self.get_upload_or_404(upload_id, user_id)
-        df = await self._get_trades_df(upload_id)
+        await self.get_data_source_or_404(data_source_id, user_id)
+        df = await self._get_trades_df(data_source_id)
         metrics = calculate_distribution(df)
 
         await self.set_cached(cache_key, metrics)
         return metrics
 
-    async def get_simulations(self, upload_id: str, user_id: str) -> dict:
+    async def get_simulations(self, data_source_id: str, user_id: str) -> dict:
         """Get simulation results."""
-        cache_key = self._cache_key(user_id, upload_id, "simulate")
+        cache_key = self._cache_key(user_id, data_source_id, "simulate")
         cached = await self.get_cached(cache_key)
         if cached:
             return cached
 
-        await self.get_upload_or_404(upload_id, user_id)
-        df = await self._get_trades_df(upload_id)
+        await self.get_data_source_or_404(data_source_id, user_id)
+        df = await self._get_trades_df(data_source_id)
         metrics = calculate_simulations(df)
 
         await self.set_cached(cache_key, metrics)
         return metrics
 
-    async def get_equity_curve(self, upload_id: str, user_id: str) -> list:
+    async def get_equity_curve(self, data_source_id: str, user_id: str) -> list:
         """Get equity curve data (balance per trade, sorted chronologically)."""
-        cache_key = self._cache_key(user_id, upload_id, "equity_curve")
+        cache_key = self._cache_key(user_id, data_source_id, "equity_curve")
         cached = await self.get_cached(cache_key)
         if cached:
             return cached
 
-        await self.get_upload_or_404(upload_id, user_id)
-        df = await self._get_trades_df(upload_id)
+        await self.get_data_source_or_404(data_source_id, user_id)
+        df = await self._get_trades_df(data_source_id)
 
         if df.empty:
             return []
 
-        # Sort by closed_at to ensure chronological order
-        from sqlalchemy import select, asc
-        from app.modules.parser.models import Trade
-
         result = await self.db.execute(
             select(Trade)
-            .where(Trade.upload_id == uuid.UUID(upload_id))
+            .where(Trade.data_source_id == uuid.UUID(data_source_id))
             .order_by(asc(Trade.closed_at))
         )
         trades = result.scalars().all()
@@ -332,18 +327,22 @@ class AnalyticsService:
         await self.set_cached(cache_key, curve)
         return curve
 
-    async def compare_uploads(self, upload_id_a: str, upload_id_b: str, user_id: str) -> dict:
-        """Compare two uploads side-by-side with deltas."""
-        cache_key = self._cache_key(user_id, f"{upload_id_a},{upload_id_b}", "compare")
+    async def compare_data_sources(
+        self, data_source_id_a: str, data_source_id_b: str, user_id: str
+    ) -> dict:
+        """Compare two data sources side-by-side with deltas."""
+        cache_key = self._cache_key(
+            user_id, f"{data_source_id_a},{data_source_id_b}", "compare"
+        )
         cached = await self.get_cached(cache_key)
         if cached:
             return cached
 
-        await self.get_upload_or_404(upload_id_a, user_id)
-        await self.get_upload_or_404(upload_id_b, user_id)
+        await self.get_data_source_or_404(data_source_id_a, user_id)
+        await self.get_data_source_or_404(data_source_id_b, user_id)
 
-        df_a = await self._get_trades_df(upload_id_a)
-        df_b = await self._get_trades_df(upload_id_b)
+        df_a = await self._get_trades_df(data_source_id_a)
+        df_b = await self._get_trades_df(data_source_id_b)
 
         metrics_a = calculate_global_metrics(df_a)
         metrics_b = calculate_global_metrics(df_b)
@@ -359,8 +358,14 @@ class AnalyticsService:
                 delta[key] = None
 
         result = {
-            "upload_a": {"upload_id": upload_id_a, "metrics": metrics_a},
-            "upload_b": {"upload_id": upload_id_b, "metrics": metrics_b},
+            "data_source_a": {
+                "data_source_id": data_source_id_a,
+                "metrics": metrics_a,
+            },
+            "data_source_b": {
+                "data_source_id": data_source_id_b,
+                "metrics": metrics_b,
+            },
             "delta": delta,
         }
 

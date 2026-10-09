@@ -95,7 +95,7 @@ async def get_history(
             "id": str(h.id),
             "user_id": str(h.user_id),
             "rule_id": str(h.rule_id),
-            "upload_id": str(h.upload_id) if h.upload_id else None,
+            "data_source_id": str(h.data_source_id) if h.data_source_id else None,
             "triggered_value": h.triggered_value,
             "triggered_at": h.triggered_at,
         } for h in items],

@@ -168,68 +168,79 @@ poetry run alembic upgrade head   # re-apply
 **Files**: `app/modules/analytics/service.py`
 **Lines**: ~100
 **Dependencies**: 1.5
+**Status**: ✅ Complete
 
-- [ ] Replace all `upload_id` → `data_source_id` references
-- [ ] Update `_get_trades_df()` query: filter by `data_source_id`
-- [ ] Add optional `start_date` parameter — filter `trades.closed_at >= start_date`
-- [ ] Add optional `end_date` parameter — filter `trades.closed_at <= end_date`
-- [ ] Add optional `granularity` parameter (week|month|year) for time-series grouping
-- [ ] Update Redis cache keys: `analytics:{data_source_id}:{endpoint}:{date_params_hash}`
+- [x] Replace all `upload_id` → `data_source_id` references
+- [x] Update `_get_trades_df()` query: filter by `data_source_id`
+- [x] Add optional `start_date` parameter — filter `trades.closed_at >= start_date`
+- [x] Add optional `end_date` parameter — filter `trades.closed_at <= end_date`
+- [x] Add optional `granularity` parameter (week|month|year) for time-series grouping
+- [x] Update Redis cache keys: `analytics:{data_source_id}:{endpoint}:{date_params_hash}`
 
 ### Task 3.2: Update Analytics Router
 **Files**: `app/modules/analytics/router.py`
 **Lines**: ~40
 **Dependencies**: 3.1
+**Status**: ✅ Complete
 
-- [ ] Rename path param `{upload_id}` → `{data_source_id}` in all endpoints
-- [ ] Add query params `start_date`, `end_date`, `granularity` to all analytics endpoints
-- [ ] Update `GET /analytics/compare?ids=...` to use data_source_ids
+- [x] Rename path param `{upload_id}` → `{data_source_id}` in all endpoints
+- [x] Add query params `start_date`, `end_date`, `granularity` to all analytics endpoints
+- [x] Update `GET /analytics/compare?ids=...` to use data_source_ids
 
 ### Task 3.3: Update Alerts Module
 **Files**: `app/modules/alerts/models.py`, `app/modules/alerts/service.py`
 **Lines**: ~40
 **Dependencies**: 1.5
+**Status**: ✅ Complete
 
-- [ ] `alerts/models.py`: Rename `upload_id` → `data_source_id` in `alert_history` model
-- [ ] `alerts/service.py`: Update all `upload_id` references → `data_source_id`
-- [ ] Update alert trigger logic to work with data_source_id
+- [x] `alerts/models.py`: Rename `upload_id` → `data_source_id` in `alert_history` model
+- [x] `alerts/service.py`: Update all `upload_id` references → `data_source_id`
+- [x] Update alert trigger logic to work with data_source_id
+- [x] Created Alembic migration 009 for FK rename
 
 ### Task 3.4: Update AI Engine Module
 **Files**: `app/modules/ai_engine/service.py`, `app/modules/ai_engine/router.py`
 **Lines**: ~40
 **Dependencies**: 1.5
+**Status**: ✅ Complete
 
-- [ ] `service.py`: Update cache keys from `ai:{upload_id}:...` → `ai:{data_source_id}:...`
-- [ ] `service.py`: Update trade query to use `data_source_id`
-- [ ] `router.py`: Rename path param `{upload_id}` → `{data_source_id}`
+- [x] `service.py`: Update cache keys from `ai:{upload_id}:...` → `ai:{data_source_id}:...`
+- [x] `service.py`: Update trade query to use `data_source_id`
+- [x] `router.py`: Rename path param `{upload_id}` → `{data_source_id}`
 
 ### Task 3.5: Update Reports Module
 **Files**: `app/modules/reports/service.py`, `app/modules/reports/router.py`
 **Lines**: ~30
 **Dependencies**: 1.5
+**Status**: ✅ Complete
 
-- [ ] `service.py`: Update references from `upload_id` → `data_source_id`
-- [ ] `router.py`: Rename path param if applicable
+- [x] `service.py`: Update references from `upload_id` → `data_source_id`
+- [x] `router.py`: Rename path param if applicable
+- [x] Created `DataSourceInfo` schema to replace `UploadInfo`
 
 ### Task 3.6: Delete Old Modules
 **Files**: `app/modules/uploads/`, `app/modules/parser/`
 **Lines**: ~0 (deletions only)
 **Dependencies**: 3.1, 3.3, 3.4, 3.5 (all downstream must be updated first)
+**Status**: ✅ Complete
 
-- [ ] Delete `app/modules/uploads/` entire directory
-- [ ] Delete `app/modules/parser/` entire directory (trade_utils already extracted in Task 1.1)
-- [ ] Remove imports from `app/main.py` if any remain
-- [ ] Verify no dangling imports: `grep -r "from app.modules.uploads" app/` and `grep -r "from app.modules.parser" app/`
+- [x] Delete `app/modules/uploads/` entire directory (6 files)
+- [x] Delete `app/modules/parser/` entire directory (7 files, after moving Trade model)
+- [x] Remove imports from `app/main.py` if any remain
+- [x] Verify no dangling imports: 0 references to `app.modules.uploads` or `app.modules.parser`
+- [x] Moved `Trade` model from `parser/models.py` → `data_sources/models.py`
+- [x] Updated all Trade imports across codebase (8+ files)
 
 ### Task 3.7: Update Downstream Tests
 **Files**: `tests/modules/test_analytics.py`, `tests/modules/test_alerts.py`
 **Lines**: ~60
 **Dependencies**: 3.1, 3.3
+**Status**: ✅ Complete
 
-- [ ] Update test fixtures: replace Upload with DataSource
-- [ ] Update test assertions: `upload_id` → `data_source_id`
-- [ ] Add tests for date filtering (start_date, end_date, granularity)
-- [ ] Delete `tests/modules/test_uploads.py` and `tests/modules/test_parser.py`
+- [x] Update test fixtures: replace Upload with DataSource
+- [x] Update test assertions: `upload_id` → `data_source_id`
+- [x] Add tests for date filtering (start_date, end_date, granularity)
+- [x] Delete `tests/modules/test_uploads.py` and `tests/modules/test_parser.py`
 
 ---
 

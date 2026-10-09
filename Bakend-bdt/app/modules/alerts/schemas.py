@@ -45,13 +45,13 @@ class HistoryResponse(BaseModel):
     id: str
     user_id: str
     rule_id: str
-    upload_id: str | None
+    data_source_id: str | None
     triggered_value: Decimal
     triggered_at: datetime
 
     model_config = {"from_attributes": True}
 
-    @field_validator("id", "user_id", "rule_id", "upload_id", mode="before")
+    @field_validator("id", "user_id", "rule_id", "data_source_id", mode="before")
     @classmethod
     def convert_uuid_to_str(cls, v):
         return str(v) if v is not None else v

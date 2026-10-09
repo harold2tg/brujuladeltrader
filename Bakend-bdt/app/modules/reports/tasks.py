@@ -2,6 +2,7 @@
 
 import json
 import logging
+import os
 
 import redis.asyncio as redis
 
@@ -12,7 +13,7 @@ logger = logging.getLogger(__name__)
 
 def generate_report_pdf_sync(
     job_id: str,
-    upload_id: str,
+    data_source_id: str,
     user_id: str,
     year: int,
     month: int | None,
@@ -32,7 +33,7 @@ def generate_report_pdf_sync(
         calculate_by_session,
         calculate_global_metrics,
     )
-    from app.modules.parser.models import Trade
+    from app.modules.data_sources.models import Trade
     from app.modules.reports.insights import InsightGenerator
     from sqlalchemy import select
 
@@ -50,9 +51,12 @@ def generate_report_pdf_sync(
         update_job("processing")
 
         # Get trades from DB (sync session)
+        import uuid as uuid_mod
         with sync_session_factory() as session:
             result = session.execute(
-                select(Trade).where(Trade.upload_id == upload_id)
+                select(Trade).where(
+                    Trade.data_source_id == uuid_mod.UUID(data_source_id)
+                )
             )
             trades = result.scalars().all()
 
@@ -91,7 +95,7 @@ def generate_report_pdf_sync(
         template = env.get_template("report.html")
 
         html_content = template.render(
-            upload_id=upload_id,
+            data_source_id=data_source_id,
             year=year,
             month=month,
             language=language,
@@ -119,7 +123,3 @@ def generate_report_pdf_sync(
     except Exception as e:
         logger.error("PDF generation failed: %s", e)
         update_job("failed", error=str(e))
-
-
-# Try to import os at module level
-import os

@@ -3,15 +3,15 @@
 from pydantic import BaseModel
 
 
-class UploadInfo(BaseModel):
-    """Basic upload information for reports."""
+class DataSourceInfo(BaseModel):
+    """Basic data source information for reports."""
     id: str
-    original_name: str
-    status: str
-    total_trades: int | None = None
-    date_from: str | None = None
-    date_to: str | None = None
-    period_label: str | None = None
+    name: str
+    broker: str
+    broker_account_id: str
+    trade_count: int | None = None
+    first_trade_at: str | None = None
+    last_trade_at: str | None = None
 
 
 class PeriodInfo(BaseModel):
@@ -31,7 +31,7 @@ class Insight(BaseModel):
 
 class MonthlyReportData(BaseModel):
     """Monthly report data."""
-    upload_info: UploadInfo
+    data_source_info: DataSourceInfo
     period: PeriodInfo
     metrics: dict
     insights: list[Insight]
@@ -40,7 +40,7 @@ class MonthlyReportData(BaseModel):
 
 class AnnualReportData(BaseModel):
     """Annual report data."""
-    upload_info: UploadInfo
+    data_source_info: DataSourceInfo
     period: PeriodInfo
     monthly_breakdown: list[dict]
     annual_summary: dict
