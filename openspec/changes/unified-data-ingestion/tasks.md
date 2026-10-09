@@ -47,31 +47,34 @@
 - [ ] `SyncResponse` — `{ job_id, status }`
 
 ### Task 1.4: Alembic Migration
-**Files**: `alembic/versions/XXX_unified_data_ingestion.py`
+**Files**: `alembic/versions/008_unified_data_ingestion.py`
 **Lines**: ~120
 **Dependencies**: 1.2
+**Status**: ✅ Complete
 
-- [ ] Create `data_sources` table
-- [ ] Migrate `uploads WHERE source='ctrader'` → `data_sources`
-- [ ] Add `data_source_id` column to `trades` (nullable)
-- [ ] Copy `upload_id` → `data_source_id` for migrated trades
-- [ ] Delete trades linked to file uploads (not in data_sources)
-- [ ] Make `data_source_id` NOT NULL
-- [ ] Drop old FK `trades_upload_id_fkey`
-- [ ] Drop `upload_id` column from `trades`
-- [ ] Add new FK `trades_data_source_id_fkey`
-- [ ] Add unique partial index `idx_trades_user_deal_id` (WHERE deal_id IS NOT NULL)
-- [ ] Drop `uploads` table
-- [ ] **Rollback plan**: reverse all steps in downgrade()
+- [x] Create `data_sources` table
+- [x] Migrate `uploads WHERE source='ctrader'` → `data_sources`
+- [x] Add `data_source_id` column to `trades` (nullable)
+- [x] Copy `upload_id` → `data_source_id` for migrated trades
+- [x] Delete trades linked to file uploads (not in data_sources)
+- [x] Make `data_source_id` NOT NULL
+- [x] Drop old FK `trades_upload_id_fkey`
+- [x] Drop `upload_id` column from `trades`
+- [x] Add new FK `trades_data_source_id_fkey`
+- [x] Add unique partial index `idx_trades_user_deal_id` (WHERE deal_id IS NOT NULL)
+- [x] Drop `uploads` table
+- [x] **Rollback plan**: reverse all steps in downgrade()
 
 ### Task 1.5: Update Trade Model
-**Files**: `app/modules/parser/models.py` (will be deleted later, but update FK reference now)
+**Files**: `app/modules/parser/models.py`
 **Lines**: ~10
 **Dependencies**: 1.4
+**Status**: ✅ Complete
 
-- [ ] Rename `upload_id` → `data_source_id` in Trade model
-- [ ] Update FK to point to `data_sources.id`
-- [ ] Update relationship: `data_source = relationship("DataSource", backref="trades")`
+- [x] Rename `upload_id` → `data_source_id` in Trade model
+- [x] Update FK to point to `data_sources.id`
+- [x] Update relationship: `data_source = relationship("DataSource", backref="trades")`
+- [x] Update `alembic/env.py` to import DataSource instead of Upload
 
 **Validation**:
 ```bash

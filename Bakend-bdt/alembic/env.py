@@ -13,7 +13,7 @@ from app.database import Base
 
 # Import all models here so Alembic can detect them
 from app.modules.auth.models import User  # noqa: F401
-from app.modules.uploads.models import Upload  # noqa: F401
+from app.modules.data_sources.models import DataSource  # noqa: F401
 from app.modules.parser.models import Trade  # noqa: F401
 from app.modules.ctrader.models import CtraderCredentials  # noqa: F401
 from app.modules.ai_engine.models import AiCredentials  # noqa: F401

@@ -17,7 +17,7 @@ class Trade(Base):
     __tablename__ = "trades"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    upload_id = Column(UUID(as_uuid=True), ForeignKey("uploads.id"), nullable=False)
+    data_source_id = Column(UUID(as_uuid=True), ForeignKey("data_sources.id", ondelete="CASCADE"), nullable=False)
     user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
     symbol = Column(String(20), nullable=False)
     direction = Column(String(10), nullable=False)
@@ -38,5 +38,5 @@ class Trade(Base):
     deal_id = Column(String(100), nullable=True)  # cTrader deal ID for idempotency
 
     # Relationships
-    upload = relationship("Upload", backref="trades")
+    data_source = relationship("DataSource", backref="trades")
     user = relationship("User", backref="trades")
