@@ -15,6 +15,7 @@ from app.modules.ctrader.router import router as ctrader_router
 from app.modules.reports.router import router as reports_router
 from app.modules.ai_engine.router import router as ai_router
 from app.modules.alerts.router import router as alerts_router
+from app.modules.data_sources.router import router as data_sources_router
 
 
 @asynccontextmanager
@@ -51,6 +52,7 @@ app.include_router(ctrader_router)
 app.include_router(reports_router)
 app.include_router(ai_router)
 app.include_router(alerts_router)
+app.include_router(data_sources_router)
 
 
 @app.get("/health")

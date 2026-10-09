@@ -235,7 +235,7 @@ async def sync_trades(
         data.date,
     )
     return {
-        "job_id": result["upload_id"],
+        "job_id": result["data_source_id"],
         "status": result["status"],
         "estimated_trades": result["total_trades"],
     }

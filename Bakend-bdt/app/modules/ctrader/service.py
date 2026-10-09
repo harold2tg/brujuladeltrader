@@ -11,9 +11,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.config import settings
 from app.modules.ctrader.client import CtraderClient, health_check
 from app.modules.ctrader.models import CtraderCredentials
+from app.modules.data_sources.service import DataSourceService
 from app.modules.parser.models import Trade
 from app.shared.trade_utils import calculate_derived_fields
-from app.modules.uploads.models import Upload
 from app.shared.crypto import decrypt, encrypt, mask_token
 from app.shared.exceptions import BadRequestException, NotFoundException
 
@@ -217,174 +217,185 @@ class CtraderService:
         else:
             raise BadRequestException("Invalid mode. Use 'day', 'month', or 'year'")
 
-        # Create upload record
-        upload = Upload(
-            user_id=uuid.UUID(user_id),
-            original_name=f"cTrader_{mode}_{date_str}",
-            stored_name=f"ctrader_{uuid.uuid4()}.sync",
-            stored_path="",
-            file_size_kb=0,
-            status="processing",
-            source="ctrader",
-            period_label=date_str,
+        # Create or get DataSource record (idempotent per user+broker+account)
+        data_source_service = DataSourceService(self.db)
+
+        # Decrypt account_id to use as broker_account_id
+        raw_account_id = decrypt(creds.account_id_enc)
+        account_name = creds.account_name or "cTrader Account"
+
+        data_source = await data_source_service.get_or_create_data_source(
+            user_id=user_id,
+            broker="ctrader",
+            broker_account_id=raw_account_id,
+            name=f"cTrader {account_name}",
         )
-        self.db.add(upload)
-        await self.db.commit()
+        await data_source_service.set_sync_status(str(data_source.id), "syncing")
 
-        # Get deals from cTrader
-        host = settings.CTRADER_HOST_DEMO if creds.is_demo else settings.CTRADER_HOST_LIVE
-        client = CtraderClient(host, settings.CTRADER_PORT, is_demo=creds.is_demo)
-        await client.connect()
+        try:
+            # Get deals from cTrader
+            host = settings.CTRADER_HOST_DEMO if creds.is_demo else settings.CTRADER_HOST_LIVE
+            client = CtraderClient(host, settings.CTRADER_PORT, is_demo=creds.is_demo)
+            await client.connect()
 
-        client_id = decrypt(creds.client_id_enc)
-        client_secret = decrypt(creds.client_secret_enc)
-        access_token = decrypt(creds.access_token_enc)
-        account_id = decrypt(creds.account_id_enc)
+            client_id = decrypt(creds.client_id_enc)
+            client_secret = decrypt(creds.client_secret_enc)
+            access_token = decrypt(creds.access_token_enc)
+            account_id = decrypt(creds.account_id_enc)
 
-        # Authenticate app
-        app_auth = await client.authenticate_app(client_id, client_secret)
-        if not app_auth:
-            await client.disconnect()
-            raise BadRequestException("Failed to authenticate cTrader application")
-
-        # Auto-discover account ID if stored value is not numeric
-        if not account_id.strip().isdigit():
-            accounts = await client.get_accounts(access_token)
-            if accounts:
-                matched = accounts[0]  # Use first available
-                account_id = matched["account_id"]
-                # Update stored account_id
-                creds.account_id_enc = encrypt(account_id)
-                await self.db.commit()
-                logger.info("Auto-discovered account_id: %s", account_id)
-            else:
+            # Authenticate app
+            app_auth = await client.authenticate_app(client_id, client_secret)
+            if not app_auth:
                 await client.disconnect()
-                raise BadRequestException("No cTrader accounts found for this access token")
+                raise BadRequestException("Failed to authenticate cTrader application")
 
-        # Authenticate account
-        acc_auth = await client.authenticate_account(access_token, account_id)
-        if not acc_auth:
+            # Auto-discover account ID if stored value is not numeric
+            if not account_id.strip().isdigit():
+                accounts = await client.get_accounts(access_token)
+                if accounts:
+                    matched = accounts[0]  # Use first available
+                    account_id = matched["account_id"]
+                    # Update stored account_id
+                    creds.account_id_enc = encrypt(account_id)
+                    await self.db.commit()
+                    logger.info("Auto-discovered account_id: %s", account_id)
+                else:
+                    await client.disconnect()
+                    raise BadRequestException("No cTrader accounts found for this access token")
+
+            # Authenticate account
+            acc_auth = await client.authenticate_account(access_token, account_id)
+            if not acc_auth:
+                await client.disconnect()
+                raise BadRequestException("Failed to authenticate cTrader account. Check your access token.")
+
+            # Get symbol list to map symbolId -> symbol name
+            symbols = await client.get_symbols(account_id)
+            logger.info("Loaded %d symbols from cTrader", len(symbols))
+
+            from_timestamp_ms = int(from_date.timestamp() * 1000)
+            to_timestamp_ms = int(to_date.timestamp() * 1000)
+
+            deals = await client.get_deals_history(
+                access_token, account_id, from_timestamp_ms, to_timestamp_ms
+            )
+
             await client.disconnect()
-            raise BadRequestException("Failed to authenticate cTrader account. Check your access token.")
 
-        # Get symbol list to map symbolId -> symbol name
-        symbols = await client.get_symbols(account_id)
-        logger.info("Loaded %d symbols from cTrader", len(symbols))
+            # Process deals — only keep CLOSE deals (those with closePositionDetail)
+            # Opening deals have no closePositionDetail, entry_price=0, net_pnl=0
+            trades = []
+            skipped_opens = 0
+            for idx, deal in enumerate(deals):
+                # Skip opening deals — they have no closePositionDetail
+                if not deal.get("isClose", False):
+                    skipped_opens += 1
+                    continue
 
-        from_timestamp_ms = int(from_date.timestamp() * 1000)
-        to_timestamp_ms = int(to_date.timestamp() * 1000)
-
-        deals = await client.get_deals_history(
-            access_token, account_id, from_timestamp_ms, to_timestamp_ms
-        )
-
-        await client.disconnect()
-
-        # Process deals — only keep CLOSE deals (those with closePositionDetail)
-        # Opening deals have no closePositionDetail, entry_price=0, net_pnl=0
-        trades = []
-        skipped_opens = 0
-        for idx, deal in enumerate(deals):
-            # Skip opening deals — they have no closePositionDetail
-            if not deal.get("isClose", False):
-                skipped_opens += 1
-                continue
-
-            # Check for duplicate deal_id
-            deal_id = str(deal.get("dealId", ""))
-            if deal_id:
-                existing_trade = await self.db.execute(
-                    select(Trade).where(
-                        Trade.user_id == uuid.UUID(user_id),
-                        Trade.deal_id == deal_id,
+                # Check for duplicate deal_id
+                deal_id = str(deal.get("dealId", ""))
+                if deal_id:
+                    existing_trade = await self.db.execute(
+                        select(Trade).where(
+                            Trade.user_id == uuid.UUID(user_id),
+                            Trade.deal_id == deal_id,
+                        )
                     )
-                )
-                if existing_trade.scalar_one_or_none():
-                    continue  # Skip duplicate
+                    if existing_trade.scalar_one_or_none():
+                        continue  # Skip duplicate
 
-            # Map symbolId to symbol name
-            symbol_id = deal.get("symbolId", 0)
-            symbol_name = symbols.get(symbol_id, f"SYM_{symbol_id}")
+                # Map symbolId to symbol name
+                symbol_id = deal.get("symbolId", 0)
+                symbol_name = symbols.get(symbol_id, f"SYM_{symbol_id}")
 
-            # Map trade side: 1=BUY, 2=SELL
-            trade_side = deal.get("tradeSide", 1)
-            direction = "Buy" if trade_side == 1 else "Sell"
+                # Map trade side: 1=BUY, 2=SELL
+                trade_side = deal.get("tradeSide", 1)
+                direction = "Buy" if trade_side == 1 else "Sell"
 
-            # Get prices from closePositionDetail
-            entry_price = deal.get("entryPrice", 0)
-            close_price = deal.get("executionPrice", 0)
+                # Get prices from closePositionDetail
+                entry_price = deal.get("entryPrice", 0)
+                close_price = deal.get("executionPrice", 0)
 
-            # Get PnL from closePositionDetail (in cents, divide by 100)
-            gross_profit = deal.get("grossProfit", 0)
-            commission = deal.get("commissionDetail", 0)
-            swap = deal.get("swap", 0)
+                # Get PnL from closePositionDetail (in cents, divide by 100)
+                gross_profit = deal.get("grossProfit", 0)
+                commission = deal.get("commissionDetail", 0)
+                swap = deal.get("swap", 0)
 
-            # moneyDigits: 2 means values are in cents (divide by 100)
-            money_digits = deal.get("moneyDigits", 2)
-            divisor = 10 ** money_digits
+                # moneyDigits: 2 means values are in cents (divide by 100)
+                money_digits = deal.get("moneyDigits", 2)
+                divisor = 10 ** money_digits
 
-            net_pnl = gross_profit / divisor if gross_profit else 0
-            commission_usd = commission / divisor if commission else 0
-            swap_usd = swap / divisor if swap else 0
+                net_pnl = gross_profit / divisor if gross_profit else 0
+                commission_usd = commission / divisor if commission else 0
+                swap_usd = swap / divisor if swap else 0
 
-            # Volume (already divided by 100 in client)
-            volume = deal.get("volume", 0) / 100
+                # Volume (already divided by 100 in client)
+                volume = deal.get("volume", 0) / 100
 
-            # Timestamps
-            execution_ts = deal.get("executionTimestamp", 0)
-            closed_at = datetime.fromtimestamp(execution_ts / 1000, tz=timezone.utc) if execution_ts else datetime.now(timezone.utc)
+                # Timestamps
+                execution_ts = deal.get("executionTimestamp", 0)
+                closed_at = datetime.fromtimestamp(execution_ts / 1000, tz=timezone.utc) if execution_ts else datetime.now(timezone.utc)
 
-            # Balance from closePositionDetail
-            balance_raw = deal.get("balance", 0)
-            balance = balance_raw / divisor if balance_raw else 0
+                # Balance from closePositionDetail
+                balance_raw = deal.get("balance", 0)
+                balance = balance_raw / divisor if balance_raw else 0
 
-            # Map deal to trade
-            trade_data = {
-                "upload_id": upload.id,
-                "user_id": uuid.UUID(user_id),
-                "symbol": symbol_name,
-                "direction": direction,
-                "closed_at": closed_at,
-                "entry_price": entry_price,
-                "close_price": close_price,
-                "lot_size": volume,
-                "net_pnl": net_pnl,
-                "balance": balance,
-                "deal_id": deal_id,
+                # Map deal to trade
+                trade_data = {
+                    "data_source_id": data_source.id,
+                    "user_id": uuid.UUID(user_id),
+                    "symbol": symbol_name,
+                    "direction": direction,
+                    "closed_at": closed_at,
+                    "entry_price": entry_price,
+                    "close_price": close_price,
+                    "lot_size": volume,
+                    "net_pnl": net_pnl,
+                    "balance": balance,
+                    "deal_id": deal_id,
+                }
+
+                # Calculate derived fields
+                trade_data = calculate_derived_fields(trade_data, idx + 1)
+
+                trade = Trade(**trade_data)
+                trades.append(trade)
+
+            logger.info(
+                "Processed %d deals: %d close trades, %d opening deals skipped",
+                len(deals), len(trades), skipped_opens,
+            )
+
+            # Insert trades
+            if trades:
+                self.db.add_all(trades)
+
+            # Calculate date range for metadata update
+            first_trade_at = None
+            last_trade_at = None
+            if trades:
+                dates = [t.closed_at for t in trades if t.closed_at]
+                if dates:
+                    first_trade_at = min(dates)
+                    last_trade_at = max(dates)
+
+            # Update DataSource metadata and status
+            await data_source_service.update_sync_metadata(
+                data_source_id=str(data_source.id),
+                trades_added=len(trades),
+                first_trade_at=first_trade_at,
+                last_trade_at=last_trade_at,
+            )
+
+            return {
+                "data_source_id": str(data_source.id),
+                "status": "ready",
+                "total_trades": len(trades),
             }
 
-            # Calculate derived fields
-            trade_data = calculate_derived_fields(trade_data, idx + 1)
-
-            trade = Trade(**trade_data)
-            trades.append(trade)
-
-        logger.info(
-            "Processed %d deals: %d close trades, %d opening deals skipped",
-            len(deals), len(trades), skipped_opens,
-        )
-
-        # Insert trades
-        if trades:
-            self.db.add_all(trades)
-
-        # Update upload
-        upload.status = "ready"
-        upload.total_trades = len(trades)
-        if trades:
-            dates = [t.closed_at for t in trades if t.closed_at]
-            if dates:
-                upload.date_from = min(dates).date()
-                upload.date_to = max(dates).date()
-        upload.processed_at = datetime.now(timezone.utc)
-
-        await self.db.commit()
-
-        return {
-            "upload_id": str(upload.id),
-            "status": "ready",
-            "total_trades": len(trades),
-        }
+        except Exception:
+            await data_source_service.set_sync_status(str(data_source.id), "error")
+            raise
 
     async def delete_credentials(self, user_id: str) -> None:
         """Delete cTrader credentials."""
