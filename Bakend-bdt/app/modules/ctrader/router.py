@@ -140,7 +140,8 @@ async def ctrader_callback(
         )
 
     # Parse stored data
-    parts = stored.decode().split("|")
+    stored_str = stored.decode() if isinstance(stored, bytes) else stored
+    parts = stored_str.split("|")
     client_id = parts[0]
     client_secret = parts[1]
     user_id = parts[2]
@@ -178,24 +179,38 @@ async def ctrader_callback(
     # Discover accounts using the access token
     from app.modules.ctrader.client import CtraderClient
 
-    host = settings.CTRADER_HOST_DEMO if is_demo else settings.CTRADER_HOST_LIVE
-    ctrader_client = CtraderClient(host, settings.CTRADER_PORT, is_demo=is_demo)
-    await ctrader_client.connect()
-
+    # Try both DEMO and LIVE hosts to find the account
     account_id = None
     account_name = None
     broker_name = None
+    account_is_live = False
 
-    app_auth = await ctrader_client.authenticate_app(client_id, client_secret)
-    if app_auth:
-        accounts = await ctrader_client.get_accounts(access_token)
-        if accounts:
-            matched = accounts[0]
-            account_id = matched["account_id"]
-            account_name = matched.get("account_name", "cTrader Account")
-            broker_name = matched.get("broker_name", "Broker")
-
-    await ctrader_client.disconnect()
+    for host, is_live in [(settings.CTRADER_HOST_DEMO, False), (settings.CTRADER_HOST_LIVE, True)]:
+        ctrader_client = CtraderClient(host, settings.CTRADER_PORT, is_demo=not is_live)
+        try:
+            await ctrader_client.connect()
+            app_auth = await ctrader_client.authenticate_app(client_id, client_secret)
+            if app_auth:
+                accounts = await ctrader_client.get_accounts(access_token)
+                if accounts:
+                    # Use the first account found and trust its is_live flag
+                    matched = accounts[0]
+                    account_id = matched["account_id"]
+                    account_name = matched.get("account_name", "cTrader Account")
+                    broker_name = matched.get("broker_name", "Broker")
+                    # Use the is_live flag from the account itself, not from the host
+                    account_is_live = matched.get("is_live", False)
+                    logger.info(f"Found account on {'LIVE' if is_live else 'DEMO'} host: {account_id} ({account_name}), is_live={account_is_live}")
+                    await ctrader_client.disconnect()
+                    break
+            await ctrader_client.disconnect()
+        except Exception as e:
+            logger.warning(f"Failed to connect to {'LIVE' if is_live else 'DEMO'} host: {e}")
+            try:
+                await ctrader_client.disconnect()
+            except:
+                pass
+            continue
 
     if not account_id:
         return HTMLResponse(
@@ -214,7 +229,7 @@ async def ctrader_callback(
         account_id=account_id,
         account_name=account_name,
         broker_name=broker_name,
-        is_demo=is_demo,
+        is_demo=not account_is_live,  # is_demo = True if DEMO, False if LIVE
     )
 
     # Return HTML that closes popup and notifies parent
