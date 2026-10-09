@@ -12,6 +12,12 @@ class AuthorizeRequest(BaseModel):
     is_demo: bool = False
 
 
+class AuthResponse(BaseModel):
+    """Response with the OAuth authorization URL."""
+    auth_url: str
+    state: str
+
+
 class CredentialsCreate(BaseModel):
     """Request to store cTrader credentials."""
     client_id: str

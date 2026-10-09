@@ -147,7 +147,7 @@
     "saved": "Credenciales guardadas",
     "saveError": "Error al guardar credenciales",
     "connectCtrader": "Conectar con cTrader",
-    "oauthHint": "Serás redirigido a cTrader para autorizar la conexión. Solo necesitás tu Client ID y Client Secret.",
+    "oauthHint": "Serás redirigido a cTrader para autorizar la conexión. Solo necesitás iniciar sesión en tu cuenta de cTrader.",
     "deleteTitle": "Desconectar cTrader",
     "deleteConfirm": "¿Estás seguro que querés eliminar las credenciales de cTrader?",
     "deleted": "Credenciales eliminadas",

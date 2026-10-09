@@ -23,7 +23,7 @@ def get_data_source_service(db: AsyncSession = Depends(get_db)) -> DataSourceSer
     return DataSourceService(db)
 
 
-@router.get("", response_model=dict)
+@router.get("")
 async def list_data_sources(
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=100),
@@ -36,10 +36,20 @@ async def list_data_sources(
         page=page,
         page_size=page_size,
     )
-    return success_response(data=result)
+    
+    # Convert SQLAlchemy objects to Pydantic models
+    items = [DataSourceResponse.model_validate(ds) for ds in result["items"]]
+    response_data = {
+        "items": items,
+        "total": result["total"],
+        "page": result["page"],
+        "page_size": result["page_size"],
+        "has_next": result["has_next"],
+    }
+    return success_response(data=response_data)
 
 
-@router.get("/{data_source_id}", response_model=dict)
+@router.get("/{data_source_id}")
 async def get_data_source(
     data_source_id: str,
     current_user: User = Depends(get_current_active_user),
@@ -50,7 +60,8 @@ async def get_data_source(
         data_source_id=data_source_id,
         user_id=str(current_user.id),
     )
-    return success_response(data=data_source)
+    response_data = DataSourceResponse.model_validate(data_source)
+    return success_response(data=response_data)
 
 
 @router.delete("/{data_source_id}", status_code=204)

@@ -39,6 +39,11 @@ export interface AuthorizeResult {
 // API functions
 // ---------------------------------------------------------------------------
 
+export async function getAuthUrl(): Promise<AuthorizeResult> {
+  const response = await apiClient.get<AuthorizeResult>("/ctrader/auth");
+  return response.data;
+}
+
 export async function authorizeCtrader(data: {
   client_id: string;
   client_secret: string;

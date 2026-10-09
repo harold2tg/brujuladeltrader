@@ -20,10 +20,9 @@ depends_on: Union[str, Sequence[str], None] = None
 def upgrade() -> None:
     """Rename alert_history.upload_id → data_source_id and update FK."""
 
-    # Drop old FK constraint to uploads table
-    op.drop_constraint(
-        "alert_history_upload_id_fkey", "alert_history", type_="foreignkey"
-    )
+    # Note: FK constraint alert_history_upload_id_fkey was already dropped in migration 008
+    # to allow dropping the uploads table. We only need to rename the column and create
+    # the new FK to data_sources.
 
     # Rename column
     op.alter_column(
@@ -43,8 +42,7 @@ def upgrade() -> None:
         ondelete="SET NULL",
     )
 
-    # Rename index
-    op.drop_index("ix_alert_history_upload_id", table_name="alert_history")
+    # Create index (was dropped in migration 008)
     op.create_index(
         "ix_alert_history_data_source_id", "alert_history", ["data_source_id"]
     )

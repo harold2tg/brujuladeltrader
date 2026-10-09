@@ -14,6 +14,7 @@ services:
       - api_venv:/app/.venv
     env_file:
       - ./Bakend-bdt/.env
+      - .env.development
     environment:
       - APP_ENV=development
     depends_on:

@@ -1,12 +1,12 @@
 """cTrader router with OAuth2 flow."""
 
+import logging
 import secrets
 import urllib.parse
 
-import httpx
 import redis.asyncio as redis
 from fastapi import APIRouter, Depends, Query
-from fastapi.responses import RedirectResponse
+from fastapi.responses import HTMLResponse, RedirectResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import settings
@@ -14,6 +14,7 @@ from app.dependencies import get_current_active_user, get_db, get_redis
 from app.modules.auth.models import User
 from app.modules.ctrader.schemas import (
     AuthorizeRequest,
+    AuthResponse,
     CredentialsCreate,
     CredentialsResponse,
     SyncRequest,
@@ -23,9 +24,70 @@ from app.modules.ctrader.schemas import (
 from app.modules.ctrader.service import CtraderService
 
 router = APIRouter(prefix="/ctrader", tags=["ctrader"])
+logger = logging.getLogger(__name__)
 
 CTRADER_AUTH_URL = "https://openapi.ctrader.com/apps/authorize"
-CTRADER_TOKEN_URL = "https://openapi.ctrader.com/apps/token"
+FRONTEND_URL = "http://localhost:3001"
+
+
+def _callback_html(success: bool, error: str = "") -> str:
+    """Return HTML that closes the popup and notifies the parent window."""
+    status = "success" if success else "error"
+    return f"""<!DOCTYPE html>
+<html>
+<head><title>cTrader Connection</title></head>
+<body>
+<script>
+  if (window.opener) {{
+    window.opener.postMessage(
+      {{ type: 'ctrader-oauth', status: '{status}', error: '{error}' }},
+      '{FRONTEND_URL}'
+    );
+  }}
+  window.close();
+</script>
+<p>Connection {("completed" if success else "failed")}. You can close this window.</p>
+</body>
+</html>"""
+
+
+@router.get("/auth", response_model=AuthResponse)
+async def get_auth_url(
+    current_user: User = Depends(get_current_active_user),
+    redis_client: redis.Redis = Depends(get_redis),
+):
+    """Generate OAuth authorization URL using server-side credentials.
+
+    The user just clicks "Connect cTrader" — no manual credential entry needed.
+    Client ID and Secret come from server config (CTRADER_CLIENT_ID / CTRADER_CLIENT_SECRET).
+    """
+    if not settings.CTRADER_CLIENT_ID or not settings.CTRADER_CLIENT_SECRET:
+        from app.shared.exceptions import BadRequestException
+        raise BadRequestException(
+            "cTrader OAuth is not configured. Set CTRADER_CLIENT_ID and CTRADER_CLIENT_SECRET."
+        )
+
+    # Generate state token to prevent CSRF
+    state = secrets.token_urlsafe(32)
+
+    # Store user_id, is_demo in Redis (5 min TTL) — client creds come from server config
+    await redis_client.setex(
+        f"ctrader_oauth:{state}",
+        300,
+        f"{settings.CTRADER_CLIENT_ID}|{settings.CTRADER_CLIENT_SECRET}|{str(current_user.id)}|1",
+    )
+
+    # Build the authorization URL
+    params = {
+        "client_id": settings.CTRADER_CLIENT_ID,
+        "redirect_uri": settings.CTRADER_REDIRECT_URI,
+        "response_type": "code",
+        "scope": "trading",
+        "state": state,
+    }
+    auth_url = f"{CTRADER_AUTH_URL}?{urllib.parse.urlencode(params)}"
+
+    return {"auth_url": auth_url, "state": state}
 
 
 @router.post("/authorize")
@@ -34,7 +96,10 @@ async def authorize_ctrader(
     current_user: User = Depends(get_current_active_user),
     redis_client: redis.Redis = Depends(get_redis),
 ):
-    """Start OAuth2 flow: store client credentials and return the authorization URL."""
+    """Start OAuth2 flow with user-provided client credentials (legacy).
+
+    Prefer GET /ctrader/auth for the one-click flow.
+    """
     # Generate state token to prevent CSRF
     state = secrets.token_urlsafe(32)
 
@@ -46,10 +111,9 @@ async def authorize_ctrader(
     )
 
     # Build the authorization URL
-    redirect_uri = f"{settings.CTRADER_REDIRECT_URI}"
     params = {
         "client_id": data.client_id,
-        "redirect_uri": redirect_uri,
+        "redirect_uri": settings.CTRADER_REDIRECT_URI,
         "response_type": "code",
         "scope": "trading",
         "state": state,
@@ -66,13 +130,13 @@ async def ctrader_callback(
     redis_client: redis.Redis = Depends(get_redis),
     db: AsyncSession = Depends(get_db),
 ):
-    """OAuth2 callback: exchange code for access token and store credentials."""
+    """OAuth2 callback: exchange code for tokens, store credentials, close popup."""
     # Retrieve stored data from Redis
     stored = await redis_client.get(f"ctrader_oauth:{state}")
     if not stored:
-        return RedirectResponse(
-            url="http://localhost:3001/es/ctrader?error=expired",
-            status_code=302,
+        return HTMLResponse(
+            _callback_html(False, "expired"),
+            status_code=200,
         )
 
     # Parse stored data
@@ -85,36 +149,33 @@ async def ctrader_callback(
     # Clean up Redis
     await redis_client.delete(f"ctrader_oauth:{state}")
 
-    # Exchange authorization code for access token
+    # Exchange authorization code for access token + refresh token
+    from app.modules.ctrader.client import exchange_code_for_token
+
     try:
-        async with httpx.AsyncClient() as client:
-            token_response = await client.post(
-                CTRADER_TOKEN_URL,
-                data={
-                    "grant_type": "authorization_code",
-                    "client_id": client_id,
-                    "client_secret": client_secret,
-                    "code": code,
-                    "redirect_uri": settings.CTRADER_REDIRECT_URI,
-                },
-                timeout=30,
-            )
-            token_data = token_response.json()
+        token_data = await exchange_code_for_token(
+            code=code,
+            client_id=client_id,
+            client_secret=client_secret,
+            redirect_uri=settings.CTRADER_REDIRECT_URI,
+        )
     except Exception as e:
-        return RedirectResponse(
-            url=f"http://localhost:3001/es/ctrader?error=token_exchange_failed",
-            status_code=302,
+        logger.error("Token exchange failed: %s", e)
+        return HTMLResponse(
+            _callback_html(False, "token_exchange_failed"),
+            status_code=200,
         )
 
-    if "access_token" not in token_data:
-        return RedirectResponse(
-            url=f"http://localhost:3001/es/ctrader?error=no_access_token",
-            status_code=302,
+    access_token = token_data.get("access_token")
+    refresh_token = token_data.get("refresh_token")
+
+    if not access_token:
+        return HTMLResponse(
+            _callback_html(False, "no_access_token"),
+            status_code=200,
         )
 
-    access_token = token_data["access_token"]
-
-    # Now discover accounts using the access token
+    # Discover accounts using the access token
     from app.modules.ctrader.client import CtraderClient
 
     host = settings.CTRADER_HOST_DEMO if is_demo else settings.CTRADER_HOST_LIVE
@@ -137,9 +198,9 @@ async def ctrader_callback(
     await ctrader_client.disconnect()
 
     if not account_id:
-        return RedirectResponse(
-            url="http://localhost:3001/es/ctrader?error=no_accounts",
-            status_code=302,
+        return HTMLResponse(
+            _callback_html(False, "no_accounts"),
+            status_code=200,
         )
 
     # Store credentials in database
@@ -149,17 +210,30 @@ async def ctrader_callback(
         client_id=client_id,
         client_secret=client_secret,
         access_token=access_token,
+        refresh_token=refresh_token,
         account_id=account_id,
         account_name=account_name,
         broker_name=broker_name,
         is_demo=is_demo,
     )
 
-    # Redirect back to frontend with success
-    return RedirectResponse(
-        url="http://localhost:3001/es/ctrader?connected=true",
-        status_code=302,
+    # Return HTML that closes popup and notifies parent
+    return HTMLResponse(
+        _callback_html(True),
+        status_code=200,
     )
+
+
+@router.post("/refresh")
+async def refresh_token(
+    current_user: User = Depends(get_current_active_user),
+    db: AsyncSession = Depends(get_db),
+    redis_client: redis.Redis = Depends(get_redis),
+):
+    """Refresh the access_token using the stored refresh_token."""
+    service = CtraderService(db, redis_client)
+    result = await service.refresh_token(str(current_user.id))
+    return {"success": True, "data": result}
 
 
 @router.get("/credentials")

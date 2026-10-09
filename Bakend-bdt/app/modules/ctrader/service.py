@@ -128,6 +128,7 @@ class CtraderService:
         client_id: str,
         client_secret: str,
         access_token: str,
+        refresh_token: str | None,
         account_id: str,
         account_name: str | None,
         broker_name: str | None,
@@ -143,6 +144,7 @@ class CtraderService:
             existing.client_id_enc = encrypt(client_id)
             existing.client_secret_enc = encrypt(client_secret)
             existing.access_token_enc = encrypt(access_token)
+            existing.refresh_token_enc = encrypt(refresh_token) if refresh_token else None
             existing.account_id_enc = encrypt(account_id)
             existing.account_name = account_name
             existing.broker_name = broker_name
@@ -154,6 +156,7 @@ class CtraderService:
                 client_id_enc=encrypt(client_id),
                 client_secret_enc=encrypt(client_secret),
                 access_token_enc=encrypt(access_token),
+                refresh_token_enc=encrypt(refresh_token) if refresh_token else None,
                 account_id_enc=encrypt(account_id),
                 account_name=account_name,
                 broker_name=broker_name,
@@ -163,6 +166,45 @@ class CtraderService:
 
         await self.db.commit()
         logger.info("Credentials stored via OAuth for user %s", user_id)
+
+    async def refresh_token(self, user_id: str) -> dict:
+        """Refresh the access_token using the stored refresh_token."""
+        result = await self.db.execute(
+            select(CtraderCredentials).where(CtraderCredentials.user_id == uuid.UUID(user_id))
+        )
+        creds = result.scalar_one_or_none()
+
+        if not creds:
+            raise NotFoundException("cTrader credentials not configured")
+
+        if not creds.refresh_token_enc:
+            raise BadRequestException("No refresh token available — re-authorize with cTrader")
+
+        client_id = decrypt(creds.client_id_enc)
+        client_secret = decrypt(creds.client_secret_enc)
+        refresh_token = decrypt(creds.refresh_token_enc)
+
+        from app.modules.ctrader.client import refresh_access_token
+
+        try:
+            token_data = await refresh_access_token(refresh_token, client_id, client_secret)
+        except Exception as e:
+            logger.error("Token refresh failed for user %s: %s", user_id, e)
+            raise BadRequestException("Failed to refresh cTrader token — re-authorize")
+
+        new_access_token = token_data.get("access_token")
+        new_refresh_token = token_data.get("refresh_token", refresh_token)
+
+        if not new_access_token:
+            raise BadRequestException("No access_token in refresh response")
+
+        creds.access_token_enc = encrypt(new_access_token)
+        creds.refresh_token_enc = encrypt(new_refresh_token)
+        creds.updated_at = datetime.now(timezone.utc)
+        await self.db.commit()
+
+        logger.info("Token refreshed for user %s", user_id)
+        return {"access_token": mask_token(new_access_token)}
 
     async def test_connection(self, user_id: str) -> dict:
         """Test cTrader connection with stored credentials."""
@@ -251,17 +293,25 @@ class CtraderService:
 
             # Auto-discover account ID if stored value is not numeric
             if not account_id.strip().isdigit():
-                accounts = await client.get_accounts(access_token)
-                if accounts:
-                    matched = accounts[0]  # Use first available
-                    account_id = matched["account_id"]
-                    # Update stored account_id
-                    creds.account_id_enc = encrypt(account_id)
-                    await self.db.commit()
-                    logger.info("Auto-discovered account_id: %s", account_id)
-                else:
+                try:
+                    accounts = await client.get_accounts(access_token)
+                    if accounts:
+                        matched = accounts[0]  # Use first available
+                        account_id = matched["account_id"]
+                        # Update stored account_id
+                        creds.account_id_enc = encrypt(account_id)
+                        await self.db.commit()
+                        logger.info("Auto-discovered account_id: %s", account_id)
+                    else:
+                        await client.disconnect()
+                        raise BadRequestException("No cTrader accounts found for this access token")
+                except Exception as e:
                     await client.disconnect()
-                    raise BadRequestException("No cTrader accounts found for this access token")
+                    logger.error("Failed to auto-discover account: %s", e)
+                    raise BadRequestException(
+                        f"Failed to get account list from cTrader: {str(e)}. "
+                        "Please check your access token is valid and has not expired."
+                    )
 
             # Authenticate account
             acc_auth = await client.authenticate_account(access_token, account_id)

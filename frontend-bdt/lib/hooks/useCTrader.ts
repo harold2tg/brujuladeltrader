@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   getCredentials,
+  getAuthUrl,
   authorizeCtrader,
   deleteCredentials,
   startSync,
@@ -11,6 +12,12 @@ export function useCTraderCredentials() {
   return useQuery({
     queryKey: ["ctrader", "credentials"],
     queryFn: getCredentials,
+  });
+}
+
+export function useCTraderAuthUrl() {
+  return useMutation({
+    mutationFn: getAuthUrl,
   });
 }
 

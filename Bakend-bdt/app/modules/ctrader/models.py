@@ -19,6 +19,7 @@ class CtraderCredentials(Base):
     client_id_enc = Column(Text, nullable=False)  # AES-256-GCM encrypted
     client_secret_enc = Column(Text, nullable=False)
     access_token_enc = Column(Text, nullable=False)
+    refresh_token_enc = Column(Text, nullable=True)  # AES-256-GCM encrypted
     account_id_enc = Column(Text, nullable=False)
     account_name = Column(String(100))  # Not sensitive
     broker_name = Column(String(100))  # Not sensitive

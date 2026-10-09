@@ -45,6 +45,8 @@ class Settings(BaseSettings):
     CTRADER_HOST_DEMO: str = "demo.ctraderapi.com"
     CTRADER_PORT: int = 5035
     CTRADER_REDIRECT_URI: str = "http://localhost:8001/ctrader/callback"
+    CTRADER_CLIENT_ID: str = ""
+    CTRADER_CLIENT_SECRET: str = ""
 
     # CORS
     CORS_ORIGINS: str = "http://localhost:3000,http://localhost:8080"

@@ -11,6 +11,8 @@ import ssl
 import struct
 import time
 
+import httpx
+
 try:
     from ctrader_open_api.messages.OpenApiCommonMessages_pb2 import ProtoMessage
     from ctrader_open_api.messages.OpenApiMessages_pb2 import (
@@ -203,12 +205,20 @@ class CtraderClient:
                         "trader_login": acct.traderLogin,
                     })
                 return accounts
+            elif resp_type == 2142:  # ProtoOAErrorRes
+                from ctrader_open_api.messages.OpenApiMessages_pb2 import ProtoOAErrorRes
+                error = ProtoOAErrorRes()
+                error.ParseFromString(resp_body)
+                error_msg = error.errorCode if error.errorCode else "Unknown error"
+                error_desc = error.description if error.description else ""
+                logger.error("cTrader API error getting accounts: %s - %s", error_msg, error_desc)
+                raise Exception(f"cTrader API error: {error_msg} - {error_desc}")
             else:
                 logger.warning("Unexpected accounts response type: %d", resp_type)
-                return []
+                raise Exception(f"Unexpected response type from cTrader: {resp_type}")
         except Exception as e:
             logger.error("Get accounts error: %s", e)
-            return []
+            raise
 
     async def get_symbols(self, account_id: str) -> dict[int, str]:
         """Get symbol list and return mapping {symbolId: symbolName}.
@@ -300,6 +310,63 @@ class CtraderClient:
         except Exception as e:
             logger.error("Get deals history error: %s", e)
             return []
+
+
+CTRADER_TOKEN_URL = "https://openapi.ctrader.com/apps/token"
+
+
+async def exchange_code_for_token(
+    code: str,
+    client_id: str,
+    client_secret: str,
+    redirect_uri: str,
+) -> dict:
+    """Exchange authorization code for access token and refresh token.
+
+    Calls cTrader's OAuth token endpoint (REST).
+    Returns dict with access_token, refresh_token, expires_in, etc.
+    Raises on failure.
+    """
+    async with httpx.AsyncClient() as http_client:
+        response = await http_client.post(
+            CTRADER_TOKEN_URL,
+            data={
+                "grant_type": "authorization_code",
+                "client_id": client_id,
+                "client_secret": client_secret,
+                "code": code,
+                "redirect_uri": redirect_uri,
+            },
+            timeout=30,
+        )
+        response.raise_for_status()
+        return response.json()
+
+
+async def refresh_access_token(
+    refresh_token: str,
+    client_id: str,
+    client_secret: str,
+) -> dict:
+    """Use refresh_token to obtain a new access_token.
+
+    Calls cTrader's OAuth token endpoint (REST).
+    Returns dict with access_token, refresh_token, expires_in, etc.
+    Raises on failure.
+    """
+    async with httpx.AsyncClient() as http_client:
+        response = await http_client.post(
+            CTRADER_TOKEN_URL,
+            data={
+                "grant_type": "refresh_token",
+                "client_id": client_id,
+                "client_secret": client_secret,
+                "refresh_token": refresh_token,
+            },
+            timeout=30,
+        )
+        response.raise_for_status()
+        return response.json()
 
 
 async def health_check(host: str, port: int) -> tuple[bool, int]:

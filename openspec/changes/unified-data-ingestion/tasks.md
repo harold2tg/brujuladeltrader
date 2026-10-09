@@ -244,58 +244,96 @@ poetry run alembic upgrade head   # re-apply
 
 ---
 
-## PR 4: Frontend (~350 lines)
+## PR 4: Frontend Migration (~491 lines added, 678 deleted)
 
-### Task 4.1: Create Data Sources API Client + Hook
-**Files**: `frontend-bdt/lib/api/data-sources.ts`, `frontend-bdt/lib/hooks/useDataSources.ts`
-**Lines**: ~80
-**Dependencies**: PR 2 (backend endpoints must exist)
-
-- [ ] Create `lib/api/data-sources.ts`:
-  - `getDataSources(page, pageSize)` → paginated list
-  - `getDataSource(id)` → detail
-  - `deleteDataSource(id)` → 204
-  - `syncDataSource(id, mode, date)` → trigger sync
-- [ ] Create `lib/hooks/useDataSources.ts`:
-  - `useDataSources()` — SWR hook for list
-  - `useDataSource(id)` — SWR hook for detail
-  - `useSyncDataSource()` — mutation hook
-
-### Task 4.2: Create Data Sources Page + Components
-**Files**: `frontend-bdt/app/[locale]/(dashboard)/data-sources/page.tsx`, `frontend-bdt/components/data-sources/DataSourceList.tsx`
+### Task 4.1: Types and API Client
+**Files**: `frontend-bdt/lib/types/data-source.ts`, `frontend-bdt/lib/api/dataSources.ts`
 **Lines**: ~150
-**Dependencies**: 4.1
+**Dependencies**: PR 2 (backend endpoints must exist)
+**Status**: ✅ Complete
 
-- [ ] Create `data-sources/page.tsx` — list all data sources
-- [ ] Create `DataSourceList.tsx` — table/card list with:
-  - Broker icon + name
-  - Trade count
-  - Last synced at
-  - Sync button
-  - Delete button with confirmation
-- [ ] Update navigation: "Uploads" → "Data Sources"
+- [x] Created DataSource, DataSourceListResponse, DataSourceDetailResponse types
+- [x] Created DataSourceFilters and SyncStatus types
+- [x] Created dataSources API client (getDataSources, getDataSource, deleteDataSource, syncDataSource)
 
-### Task 4.3: Delete Upload Frontend Code
-**Files**: `frontend-bdt/app/[locale]/(dashboard)/uploads/`, `frontend-bdt/components/uploads/`, `frontend-bdt/lib/api/uploads.ts`, `frontend-bdt/lib/hooks/useUploads.ts`
-**Lines**: ~0 (deletions only)
-**Dependencies**: 4.2 (new data sources page must exist first)
-
-- [ ] Delete `frontend-bdt/app/[locale]/(dashboard)/uploads/` directory
-- [ ] Delete `frontend-bdt/components/uploads/` directory
-- [ ] Delete `frontend-bdt/lib/api/uploads.ts`
-- [ ] Delete `frontend-bdt/lib/hooks/useUploads.ts`
-- [ ] Update any imports that referenced deleted files
-
-### Task 4.4: Update Analytics Frontend
-**Files**: `frontend-bdt/app/[locale]/(dashboard)/analytics/page.tsx`, `frontend-bdt/app/[locale]/(dashboard)/analytics/[id]/page.tsx`
+### Task 4.2: Hooks
+**Files**: `frontend-bdt/lib/hooks/useDataSources.ts`
 **Lines**: ~80
-**Dependencies**: 4.1, PR 3 (analytics API updated)
+**Dependencies**: 4.1
+**Status**: ✅ Complete
 
-- [ ] Replace `useUploads()` → `useDataSources()`
-- [ ] Update all API calls: `/uploads/{id}` → `/data-sources/{id}`
-- [ ] Add period selector component (week/month/year)
-- [ ] Pass `start_date`, `end_date`, `granularity` to analytics endpoints
-- [ ] Update analytics detail page to use `data_source_id`
+- [x] Created useDataSources hook (list with pagination)
+- [x] Created useDataSource hook (single data source)
+- [x] Created useDeleteDataSource hook (mutation)
+- [x] Created useSyncDataSource hook (mutation)
+
+### Task 4.3: Components
+**Files**: `frontend-bdt/components/data-sources/DataSourceStatusCard.tsx`, `frontend-bdt/components/data-sources/DataSourcesList.tsx`
+**Lines**: ~150
+**Dependencies**: 4.1, 4.2
+**Status**: ✅ Complete
+
+- [x] Created DataSourceStatusCard component (broker, name, sync_status, trade_count, last_synced_at)
+- [x] Created DataSourcesList component (grid layout with empty state)
+- [x] Added sync and delete actions
+- [x] Removed file upload UI (no more dropzone)
+
+### Task 4.4: Pages
+**Files**: `frontend-bdt/app/[locale]/(dashboard)/data-sources/page.tsx`, `frontend-bdt/app/[locale]/(dashboard)/analytics/[dataSourceId]/page.tsx`
+**Lines**: ~120
+**Dependencies**: 4.1, 4.2, 4.3
+**Status**: ✅ Complete
+
+- [x] Created /data-sources page (replaces /uploads)
+- [x] Renamed /analytics/[uploadId] to /analytics/[dataSourceId]
+- [x] Updated all page components to use new hooks and types
+- [x] Removed /uploads/[id] page (no longer needed)
+
+### Task 4.5: Layout and Navigation
+**Files**: `frontend-bdt/components/layout/Sidebar.tsx`
+**Lines**: ~20
+**Dependencies**: 4.4
+**Status**: ✅ Complete
+
+- [x] Changed navigation icon from Upload to Database
+- [x] Updated nav link from /uploads to /data-sources
+- [x] Updated nav key from nav.uploads to nav.dataSources
+
+### Task 4.6: Update Other Pages
+**Files**: `frontend-bdt/app/[locale]/(dashboard)/analytics/page.tsx`, `frontend-bdt/app/[locale]/(dashboard)/dashboard/page.tsx`
+**Lines**: ~80
+**Dependencies**: 4.1, 4.2
+**Status**: ✅ Complete
+
+- [x] Updated analytics page to use useDataSources hook
+- [x] Updated analytics page to show DataSource fields (name, sync_status, trade_count)
+- [x] Updated dashboard page to use useDataSources hook
+- [x] Updated dashboard page to show latestDataSource
+
+### Task 4.7: i18n
+**Files**: `frontend-bdt/messages/en.json`, `frontend-bdt/messages/es.json`
+**Lines**: ~100
+**Dependencies**: 4.4
+**Status**: ✅ Complete
+
+- [x] Replaced "uploads" section with "dataSources" in en.json
+- [x] Replaced "uploads" section with "dataSources" in es.json ("fuentes de datos")
+- [x] Updated nav, dashboard, analytics keys
+- [x] Removed file upload related translations
+
+### Task 4.8: Cleanup
+**Files**: Various legacy files
+**Lines**: ~0 (deletions only)
+**Dependencies**: 4.1-4.7 (all new code must exist first)
+**Status**: ✅ Complete
+
+- [x] Deleted `lib/api/uploads.ts`
+- [x] Deleted `lib/hooks/useUploads.ts`
+- [x] Deleted `components/uploads/` directory (3 files)
+- [x] Deleted `app/[locale]/(dashboard)/uploads/` directory (2 files)
+- [x] Deleted `app/[locale]/(dashboard)/analytics/[uploadId]/` directory
+- [x] Verified zero remaining "upload" references in source code
+- [x] Build passes successfully (npm run build)
 
 ### Task 4.5: Update Remaining Frontend Pages
 **Files**: Alert, AI, Reports pages that reference uploads

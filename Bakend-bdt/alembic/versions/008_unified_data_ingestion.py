@@ -148,7 +148,14 @@ def upgrade() -> None:
     )
 
     # ========================================================================
-    # Step 10: Drop uploads table
+    # Step 10: Drop FK constraint and index from alert_history
+    # (Must drop before dropping uploads table)
+    # ========================================================================
+    op.drop_constraint("alert_history_upload_id_fkey", "alert_history", type_="foreignkey")
+    op.drop_index("ix_alert_history_upload_id", table_name="alert_history")
+
+    # ========================================================================
+    # Step 11: Drop uploads table
     # ========================================================================
     op.drop_table("uploads")
 
@@ -157,7 +164,7 @@ def downgrade() -> None:
     """Reverse the migration: recreate uploads from data_sources."""
 
     # ========================================================================
-    # Step 10 reverse: Recreate uploads table
+    # Step 11 reverse: Recreate uploads table
     # ========================================================================
     op.create_table(
         "uploads",
@@ -176,6 +183,19 @@ def downgrade() -> None:
         sa.Column("period_label", sa.String(50), nullable=True),
         sa.Column("created_at", sa.TIMESTAMP(timezone=True), nullable=False, server_default=sa.func.now()),
         sa.Column("processed_at", sa.TIMESTAMP(timezone=True), nullable=True),
+    )
+
+    # ========================================================================
+    # Step 10 reverse: Recreate FK constraint and index on alert_history
+    # ========================================================================
+    op.create_index("ix_alert_history_upload_id", "alert_history", ["upload_id"])
+    op.create_foreign_key(
+        "alert_history_upload_id_fkey",
+        "alert_history",
+        "uploads",
+        ["upload_id"],
+        ["id"],
+        ondelete="SET NULL",
     )
 
     # ========================================================================
