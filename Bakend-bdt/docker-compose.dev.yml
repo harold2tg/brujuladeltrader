@@ -1,5 +1,7 @@
 version: "3.9"
 
+name: brujula-bdt
+
 services:
   api:
     build:

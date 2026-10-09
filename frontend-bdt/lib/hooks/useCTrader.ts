@@ -1,8 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   getCredentials,
-  saveCredentials,
-  testConnection,
+  authorizeCtrader,
   deleteCredentials,
   startSync,
   getSyncStatus,
@@ -15,20 +14,9 @@ export function useCTraderCredentials() {
   });
 }
 
-export function useSaveCTraderCredentials() {
-  const queryClient = useQueryClient();
-
+export function useAuthorizeCTrader() {
   return useMutation({
-    mutationFn: saveCredentials,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["ctrader", "credentials"] });
-    },
-  });
-}
-
-export function useTestCTraderConnection() {
-  return useMutation({
-    mutationFn: testConnection,
+    mutationFn: authorizeCtrader,
   });
 }
 

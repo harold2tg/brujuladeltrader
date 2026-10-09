@@ -125,6 +125,9 @@
   "ctrader": {
     "title": "cTrader Connection",
     "description": "Connect your cTrader account to sync trades automatically",
+    "common": {
+      "loading": "Loading..."
+    },
     "connected": "Connected",
     "notConnected": "Not connected",
     "connect": "Connect",
@@ -146,6 +149,8 @@
     "save": "Save Credentials",
     "saved": "Credentials saved",
     "saveError": "Error saving credentials",
+    "connectCtrader": "Connect with cTrader",
+    "oauthHint": "You'll be redirected to cTrader to authorize the connection. You only need your Client ID and Client Secret.",
     "deleteTitle": "Disconnect cTrader",
     "deleteConfirm": "Are you sure you want to delete cTrader credentials?",
     "deleted": "Credentials deleted",

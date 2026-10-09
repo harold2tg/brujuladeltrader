@@ -5,6 +5,13 @@ from datetime import datetime
 from pydantic import BaseModel
 
 
+class AuthorizeRequest(BaseModel):
+    """Request to start OAuth2 authorization flow."""
+    client_id: str
+    client_secret: str
+    is_demo: bool = False
+
+
 class CredentialsCreate(BaseModel):
     """Request to store cTrader credentials."""
     client_id: str

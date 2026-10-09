@@ -30,9 +30,26 @@ export interface SyncStatus {
   error?: string;
 }
 
+export interface AuthorizeResult {
+  auth_url: string;
+  state: string;
+}
+
 // ---------------------------------------------------------------------------
 // API functions
 // ---------------------------------------------------------------------------
+
+export async function authorizeCtrader(data: {
+  client_id: string;
+  client_secret: string;
+  is_demo: boolean;
+}): Promise<AuthorizeResult> {
+  const response = await apiClient.post<AuthorizeResult>(
+    "/ctrader/authorize",
+    data,
+  );
+  return response.data;
+}
 
 export async function saveCredentials(data: {
   client_id: string;

@@ -1,5 +1,7 @@
 version: "3.9"
 
+name: brujula-web
+
 services:
   web:
     build:
@@ -16,6 +18,8 @@ services:
       - NEXT_PUBLIC_API_URL=http://localhost:8001
       - NEXT_PUBLIC_APP_NAME=La Brújula del Trader
       - NEXT_PUBLIC_DEFAULT_LOCALE=es
+    tty: true
+    stdin_open: true
     networks:
       - brujula_net
 

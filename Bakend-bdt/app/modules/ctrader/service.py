@@ -12,7 +12,7 @@ from app.config import settings
 from app.modules.ctrader.client import CtraderClient, health_check
 from app.modules.ctrader.models import CtraderCredentials
 from app.modules.parser.models import Trade
-from app.modules.parser.service import calculate_derived_fields, classify_session
+from app.shared.trade_utils import calculate_derived_fields
 from app.modules.uploads.models import Upload
 from app.shared.crypto import decrypt, encrypt, mask_token
 from app.shared.exceptions import BadRequestException, NotFoundException
@@ -121,6 +121,48 @@ class CtraderService:
             "broker": broker_name,
             "account_id": discovered_account_id,
         }
+
+    async def store_credentials_oauth(
+        self,
+        user_id: str,
+        client_id: str,
+        client_secret: str,
+        access_token: str,
+        account_id: str,
+        account_name: str | None,
+        broker_name: str | None,
+        is_demo: bool,
+    ) -> None:
+        """Store credentials obtained via OAuth2 flow."""
+        result = await self.db.execute(
+            select(CtraderCredentials).where(CtraderCredentials.user_id == uuid.UUID(user_id))
+        )
+        existing = result.scalar_one_or_none()
+
+        if existing:
+            existing.client_id_enc = encrypt(client_id)
+            existing.client_secret_enc = encrypt(client_secret)
+            existing.access_token_enc = encrypt(access_token)
+            existing.account_id_enc = encrypt(account_id)
+            existing.account_name = account_name
+            existing.broker_name = broker_name
+            existing.is_demo = is_demo
+            existing.updated_at = datetime.now(timezone.utc)
+        else:
+            creds = CtraderCredentials(
+                user_id=uuid.UUID(user_id),
+                client_id_enc=encrypt(client_id),
+                client_secret_enc=encrypt(client_secret),
+                access_token_enc=encrypt(access_token),
+                account_id_enc=encrypt(account_id),
+                account_name=account_name,
+                broker_name=broker_name,
+                is_demo=is_demo,
+            )
+            self.db.add(creds)
+
+        await self.db.commit()
+        logger.info("Credentials stored via OAuth for user %s", user_id)
 
     async def test_connection(self, user_id: str) -> dict:
         """Test cTrader connection with stored credentials."""

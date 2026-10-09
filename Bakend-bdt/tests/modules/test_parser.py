@@ -15,7 +15,7 @@ from app.modules.parser.normalizer import (
     parse_datetime,
     parse_net_pnl,
 )
-from app.modules.parser.service import classify_session, calculate_derived_fields
+from app.shared.trade_utils import classify_session, calculate_derived_fields
 from app.modules.parser.validators import validate_columns, map_columns
 
 

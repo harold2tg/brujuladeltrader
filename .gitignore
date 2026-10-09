@@ -48,3 +48,5 @@ infra/terraform/.terraform.lock.hcl
 *.tfstate
 *.tfstate.backup
 *.tfplan
+# Local Pi runtime state
+.atl/

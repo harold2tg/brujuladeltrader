@@ -6,7 +6,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
-import { Loader2, Plug, Trash2, CheckCircle2, XCircle } from "lucide-react";
+import { Loader2, Plug, Trash2, CheckCircle2, XCircle, ExternalLink } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -20,27 +20,23 @@ import {
 } from "@/components/ui/card";
 import {
   useCTraderCredentials,
-  useSaveCTraderCredentials,
   useDeleteCTraderCredentials,
-  useTestCTraderConnection,
+  useAuthorizeCTrader,
 } from "@/lib/hooks/useCTrader";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 
-const credentialSchema = z.object({
+const oauthSchema = z.object({
   client_id: z.string().min(1, "Required"),
   client_secret: z.string().min(1, "Required"),
-  access_token: z.string().min(1, "Required"),
-  account_id: z.string().min(1, "Required"),
 });
 
-type CredentialFormData = z.infer<typeof credentialSchema>;
+type OAuthFormData = z.infer<typeof oauthSchema>;
 
 export function CTraderConnectForm() {
   const t = useTranslations("ctrader");
   const { data: credentials, isLoading } = useCTraderCredentials();
-  const saveMutation = useSaveCTraderCredentials();
   const deleteMutation = useDeleteCTraderCredentials();
-  const testMutation = useTestCTraderConnection();
+  const authorizeMutation = useAuthorizeCTrader();
   const [showDelete, setShowDelete] = useState(false);
 
   const hasCredentials = credentials?.has_credentials ?? false;
@@ -49,35 +45,21 @@ export function CTraderConnectForm() {
     register,
     handleSubmit,
     formState: { errors },
-    reset,
-  } = useForm<CredentialFormData>({
-    resolver: zodResolver(credentialSchema),
+  } = useForm<OAuthFormData>({
+    resolver: zodResolver(oauthSchema),
   });
 
-  async function onSubmit(data: CredentialFormData) {
+  async function onSubmit(data: OAuthFormData) {
     try {
-      const result = await saveMutation.mutateAsync(data);
-      if (result.connected) {
-        toast.success(t("connectionSuccess"));
-      } else {
-        toast.warning(t("saved") + " — " + t("connectionFailed"));
-      }
-      reset();
+      const result = await authorizeMutation.mutateAsync({
+        client_id: data.client_id,
+        client_secret: data.client_secret,
+        is_demo: false,
+      });
+      // Redirect to cTrader OAuth
+      window.location.href = result.auth_url;
     } catch {
       toast.error(t("saveError"));
-    }
-  }
-
-  async function handleTest() {
-    try {
-      const result = await testMutation.mutateAsync();
-      if (result.connected) {
-        toast.success(`${t("connectionSuccess")} (${result.latency_ms}ms)`);
-      } else {
-        toast.error(result.error || t("connectionFailed"));
-      }
-    } catch {
-      toast.error(t("connectionFailed"));
     }
   }
 
@@ -128,28 +110,13 @@ export function CTraderConnectForm() {
                 </CardDescription>
               </div>
             </div>
-            <div className="flex gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleTest}
-                disabled={testMutation.isPending}
-              >
-                {testMutation.isPending ? (
-                  <Loader2 className="size-4 animate-spin" />
-                ) : (
-                  <Plug className="size-4" />
-                )}
-                {t("testConnection")}
-              </Button>
-              <Button
-                variant="destructive"
-                size="sm"
-                onClick={() => setShowDelete(true)}
-              >
-                <Trash2 className="size-4" />
-              </Button>
-            </div>
+            <Button
+              variant="destructive"
+              size="sm"
+              onClick={() => setShowDelete(true)}
+            >
+              <Trash2 className="size-4" />
+            </Button>
           </div>
         </CardHeader>
 
@@ -167,7 +134,7 @@ export function CTraderConnectForm() {
     );
   }
 
-  // Not connected — show form
+  // Not connected — show OAuth form
   return (
     <Card className="border-border/40">
       <CardHeader>
@@ -209,45 +176,24 @@ export function CTraderConnectForm() {
                 <p className="text-xs text-destructive">{errors.client_secret.message}</p>
               )}
             </div>
-            <div className="space-y-2">
-              <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/70">
-                {t("credentials.accessToken")}
-              </Label>
-              <Input
-                type="password"
-                placeholder={t("credentials.accessTokenPlaceholder")}
-                {...register("access_token")}
-              />
-              {errors.access_token && (
-                <p className="text-xs text-destructive">{errors.access_token.message}</p>
-              )}
-            </div>
-            <div className="space-y-2">
-              <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/70">
-                {t("credentials.accountId")}
-              </Label>
-              <Input
-                placeholder={t("credentials.accountIdPlaceholder")}
-                {...register("account_id")}
-              />
-              {errors.account_id && (
-                <p className="text-xs text-destructive">{errors.account_id.message}</p>
-              )}
-            </div>
           </div>
 
           <Button
             type="submit"
-            disabled={saveMutation.isPending}
+            disabled={authorizeMutation.isPending}
             className="shadow-lg shadow-primary/20"
           >
-            {saveMutation.isPending ? (
+            {authorizeMutation.isPending ? (
               <Loader2 className="size-4 animate-spin" />
             ) : (
-              <Plug className="size-4" />
+              <ExternalLink className="size-4" />
             )}
-            {t("save")}
+            {t("connectCtrader")}
           </Button>
+
+          <p className="text-xs text-muted-foreground">
+            {t("oauthHint")}
+          </p>
         </form>
       </CardContent>
     </Card>

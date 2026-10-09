@@ -11,17 +11,22 @@ import ssl
 import struct
 import time
 
-from ctrader_open_api.messages.OpenApiCommonMessages_pb2 import ProtoMessage
-from ctrader_open_api.messages.OpenApiMessages_pb2 import (
-    ProtoOAApplicationAuthReq,
-    ProtoOAAccountAuthReq,
-    ProtoOAGetAccountListByAccessTokenReq,
-    ProtoOAGetAccountListByAccessTokenRes,
-    ProtoOADealListReq,
-    ProtoOADealListRes,
-    ProtoOASymbolsListReq,
-    ProtoOASymbolsListRes,
-)
+try:
+    from ctrader_open_api.messages.OpenApiCommonMessages_pb2 import ProtoMessage
+    from ctrader_open_api.messages.OpenApiMessages_pb2 import (
+        ProtoOAApplicationAuthReq,
+        ProtoOAAccountAuthReq,
+        ProtoOAGetAccountListByAccessTokenReq,
+        ProtoOAGetAccountListByAccessTokenRes,
+        ProtoOADealListReq,
+        ProtoOADealListRes,
+        ProtoOASymbolsListReq,
+        ProtoOASymbolsListRes,
+    )
+    CTRADER_AVAILABLE = True
+except ImportError:
+    CTRADER_AVAILABLE = False
+    ProtoMessage = None
 
 logger = logging.getLogger(__name__)
 
@@ -47,6 +52,11 @@ def _build_wrapped_message(inner_message) -> bytes:
     - 4 bytes: length of serialized ProtoMessage (big-endian)
     - ProtoMessage bytes: { payloadType: inner.payloadType, payload: inner.SerializeToString() }
     """
+    if not CTRADER_AVAILABLE:
+        raise RuntimeError(
+            "ctrader-open-api package is not installed. "
+            "Install it with: pip install ctrader-open-api"
+        )
     msg = ProtoMessage(
         payload=inner_message.SerializeToString(),
         payloadType=inner_message.payloadType,
