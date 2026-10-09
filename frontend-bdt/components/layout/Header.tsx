@@ -11,6 +11,7 @@ import {
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
@@ -96,14 +97,16 @@ export function Header() {
             </div>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" sideOffset={8} className="w-60 overflow-hidden">
-            <DropdownMenuLabel className="pb-3">
-              <div className="flex flex-col gap-1">
-                <span className="text-sm font-bold">{user?.name}</span>
-                <span className="text-xs text-muted-foreground">
-                  {user?.email}
-                </span>
-              </div>
-            </DropdownMenuLabel>
+            <DropdownMenuGroup>
+              <DropdownMenuLabel className="pb-3">
+                <div className="flex flex-col gap-1">
+                  <span className="text-sm font-bold">{user?.name}</span>
+                  <span className="text-xs text-muted-foreground">
+                    {user?.email}
+                  </span>
+                </div>
+              </DropdownMenuLabel>
+            </DropdownMenuGroup>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={() => router.push("/settings")}>
               <User className="size-4" />
