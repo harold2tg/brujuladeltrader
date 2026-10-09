@@ -1,45 +1,46 @@
 # La Brújula del Trader
 
-> Plataforma profesional de análisis estadístico para traders de XAUUSD (Oro). Conectá tu cuenta real de cTrader, importá tus operaciones automáticamente, y mejorá tu estrategia con análisis IA.
+> Professional statistical analysis platform for XAUUSD (Gold) traders. Connect your real cTrader account, automatically import your trades, and improve your strategy with AI analysis.
 
 ---
 
-## Tabla de Contenidos
+## Table of Contents
 
-1. [Qué es](#qué-es)
-2. [Arquitectura](#arquitectura)
-3. [Prerrequisitos](#prerrequisitos)
-4. [Configuración de cTrader](#configuración-de-ctrader)
-5. [Setup Rápido](#setup-rápido)
-6. [Variables de Entorno](#variables-de-entorno)
-7. [Cómo Usar](#cómo-usar)
-8. [Puertos y Servicios](#puertos-y-servicios)
-9. [Comandos Útiles](#comandos-útiles)
+1. [What is this?](#what-is-this)
+2. [Architecture](#architecture)
+3. [Prerequisites](#prerequisites)
+4. [cTrader Setup](#ctrader-setup)
+5. [Quick Start](#quick-start)
+6. [Environment Variables](#environment-variables)
+7. [How to Use](#how-to-use)
+8. [Ports & Services](#ports--services)
+9. [Useful Commands](#useful-commands)
 10. [Troubleshooting](#troubleshooting)
-11. [Estructura del Proyecto](#estructura-del-proyecto)
-12. [Licencia](#licencia)
+11. [Project Structure](#project-structure)
+12. [License](#license)
 
 ---
 
-## Qué es
+## What is this?
 
 ```
 ┌─────────────────────────────────────────────────────────┐
-│                    TU NAVEGADOR                         │
+│                    YOUR BROWSER                         │
 │                  http://localhost:3001                   │
 ├─────────────────────────────────────────────────────────┤
 │  ┌─────────────┐  ┌──────────────┐  ┌───────────────┐  │
-│  │   Dashboard  │  │ Fuentede    │  │  Análisis IA  │  │
-│  │  Métricas en │  │ Datos       │  │  Claude/GPT/  │  │
-│  │  tiempo real │  │ cTrader     │  │  Gemini       │  │
+│  │   Dashboard  │  │ Data Sources │  │  AI Engine    │  │
+│  │  Real-time   │  │ cTrader OAuth│  │  Analysis     │  │
+│  │  metrics     │  │ Auto Import  │  │  Claude/GPT/  │  │
+│  │              │  │ (no files!)  │  │  Gemini       │  │
 │  └─────────────┘  └──────────────┘  └───────────────┘  │
 └─────────────────────────────────────────────────────────┘
                            │
                            ▼
 ┌─────────────────────────────────────────────────────────┐
-│              Conexión cTrader (OAuth2)                  │
-│         Sync automática de operaciones reales           │
-│    (sin subir archivos manualmente)                     │
+│              cTrader Connection (OAuth2)                │
+│         Automatic sync of real trades                   │
+│    (no manual CSV uploads)                              │
 └─────────────────────────────────────────────────────────┘
                            │
                            ▼
@@ -49,181 +50,181 @@
 ├─────────────────────────────────────────────────────────┤
 │  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌────────┐  │
 │  │   Auth   │  │Data      │  │ AI Engine│  │cTrader │  │
-│  │  JWT +   │  │Sources   │  │ Análisis │  │ OAuth2 │  │
-│  │  bcrypt  │  │Import    │  │ trades   │  │ Auto-  │  │
-│  │          │  │automático│  │ Trades   │  │ Import │  │
+│  │  JWT +   │  │Sources   │  │ Trade    │  │ OAuth2 │  │
+│  │  bcrypt  │  │Import    │  │ Analysis │  │ Auto-  │  │
+│  │          │  │Automatic │  │ Trades   │  │ Import │  │
 │  └──────────┘  └──────────┘  └──────────┘  └────────┘  │
 ├─────────────────────────────────────────────────────────┤
-│              PostgreSQL (puerto 5433)                   │
-│              Redis (puerto 6379)                        │
+│              PostgreSQL (port 5433)                     │
+│              Redis (port 6379)                          │
 └─────────────────────────────────────────────────────────┘
 ```
 
-### ¿Cómo funciona?
+### How it works
 
-**Antes:** Subías un archivo CSV manual → Esperabas a que se procesara → Veías los datos  
-**Ahora:** Hacés clic en **"Conectar con cTrader"** → Inicias sesión → Tus trades reales se importan solos ✅
+**Before:** Upload CSV file → Wait for processing → See data  
+**Now:** Click "Connect with cTrader" → Login → Your real trades imported automatically ✅
 
 ---
 
-## Arquitectura
+## Architecture
 
-| Módulo | Descripción |
+| Module | Description |
 |--------|-------------|
-| **Auth** | Login JWT, registro, refresh tokens |
-| **DataSources** | Modelo unificado para importar datos de múltiples brokers |
-| **cTrader** | OAuth2 automático para importar trades de cuentas reales |
-| **Analytics** | Estadísticas por hora, día, mes, sesión, rachas |
-| **AI Engine** | Análisis con Claude, GPT-4, Gemini (opcional) |
-| **Alerts** | Alertas configurables por tipo de trade |
-| **Reports** | Exportación mensual/anual PDF/CSV |
+| **Auth** | JWT login, registration, refresh tokens |
+| **DataSources** | Unified model for importing data from multiple brokers |
+| **cTrader** | Automatic OAuth2 to import trades from real accounts |
+| **Analytics** | Stats by hour, day, month, session, streaks |
+| **AI Engine** | Analysis with Claude, GPT-4, Gemini (optional) |
+| **Alerts** | Configurable trade alerts |
+| **Reports** | Monthly/yearly PDF/CSV export |
 
-### Flujo de importación de datos
+### Data import flow
 
 ```
-Usuario hace clic en "Conectar con cTrader"
+User clicks "Connect with cTrader"
     ↓
-Popup abre https://id.ctrader.com/my/settings/openapi/grantingaccess/
+Popup opens https://id.ctrader.com/my/settings/openapi/grantingaccess/
     ↓
-Usuario inicia sesión con su cuenta de cTrader (FxPro, Pepperstone, etc.)
+User logs in with their cTrader account (FxPro, Pepperstone, etc.)
     ↓
-Usuario selecciona qué cuentas autorizar (Live/Demo)
+User selects which accounts to authorize (Live/Demo)
     ↓
-Backend recibe code → intercambia por access_token + refresh_token
+Backend receives code → exchanges for access_token + refresh_token
     ↓
-Backend descubre cuentas con get_accounts() → detecta si es LIVE o DEMO
+Backend discovers accounts with get_accounts() → detects LIVE or DEMO
     ↓
-Credenciales guardadas (cifradas AES-256-GCM en base de datos)
+Credentials stored (AES-256-GCM encrypted in DB)
     ↓
-Botón "Sincronizar" → importa todos los trades cerrados de esa cuenta
+Sync button → imports all closed trades from that account
     ↓
-Trades almacenados en tabla 'trades' con data_source_id como FK
+Trades stored in 'trades' table with data_source_id as FK
     ↓
-Dashboard muestra métricas calculadas desde trades importados
+Dashboard shows calculated metrics from imported trades
 ```
 
 ---
 
-## Prerrequisitos
+## Prerequisites
 
-| Requisito | Versión Mínima | Cómo verificar |
+| Requirement | Min Version | Verify |
 |-----------|----------------|----------------|
 | [Docker Desktop](https://www.docker.com/products/docker-desktop/) | v24+ | `docker --version` |
-| Git | Cualquiera | `git --version` |
+| Git | Any | `git --version` |
 
-> Solo necesitás Docker. No instalés Node.js ni Python en tu máquina.
+> You only need Docker. No need to install Node.js or Python on your machine.
 
 ---
 
-## Configuración de cTrader
+## cTrader Setup
 
-Necesitás una aplicación cTrader Open API registrada. Es **gratuita**.
+You need to register a cTrader Open API app. It's **free**.
 
-### Paso 1: Crear app en cTrader Open API
+### Step 1: Create app at cTrader Open API
 
-1. Andá a: **https://openapi.ctrader.com/apps**
-2. Logueate con tu cuenta de cTrader (o creala gratis)
-3. Click en **"Create New App"**
-4. Completá:
-   - **App Name**: `La Brújula del Trader` (o lo que quieras)
-   - **Redirect URI**: `http://localhost:8001/ctrader/callback` ⚠️ Exactamente así, sin `/` al final
+1. Go to: **https://openapi.ctrader.com/apps**
+2. Login with your cTrader account (or create one free)
+3. Click **"Create New App"**
+4. Fill out:
+   - **App Name**: `La Brújula del Trader` (or whatever you like)
+   - **Redirect URI**: `http://localhost:8001/ctrader/callback` ⚠️ Exactly this, no trailing slash
    - **App Type**: `Web App`
-5. Guardá el **Client ID** y **Client Secret**
+5. Save the **Client ID** and **Client Secret**
 
-### Paso 2: Configurar acceso a cuentas
+### Step 2: Configure account access
 
-En tu plataforma cTrader (Desktop/Web):
-1. Andá a **Settings → API Trading**
-2. Activá las cuentas que querés sincronizar
-3. Anotá los números de cuenta (ej: `1320323`)
+In your cTrader platform (Desktop/Web):
+1. Go to **Settings → API Trading**
+2. Enable the accounts you want to sync
+3. Note the account numbers (e.g., `1320323`)
 
 ---
 
-## Setup Rápido
+## Quick Start
 
-### 1. Clonar repositorio
+### 1. Clone repository
 
 ```bash
 git clone https://github.com/harold2tg/brujuladeltrader.git
 cd brujuladeltrader
 ```
 
-### 2. Configurar entorno backend
+### 2. Configure backend environment
 
 ```bash
 cp Bakend-bdt/.env.example Bakend-bdt/.env
 ```
 
-Editá `Bakend-bdt/.env` y completá estos campos:
+Edit `Bakend-bdt/.env` and fill these fields:
 
 ```bash
 APP_SECRET_KEY=$(openssl rand -hex 32)
 JWT_SECRET_KEY=$(openssl rand -hex 32)
 ENCRYPTION_KEY=$(python3 -c "import secrets; print(secrets.token_hex(32))")
 
-CTRADER_CLIENT_ID=tu_client_id_aqui
-CTRADER_CLIENT_SECRET=tu_client_secret_aqui
+CTRADER_CLIENT_ID=your_client_id_here
+CTRADER_CLIENT_SECRET=your_client_secret_here
 ```
 
-Generá los secretos con los comandos de arriba (son auto-generados por openssl/python).
+Generate the secrets with the commands above (auto-generated by openssl/python).
 
-### 3. Configurar frontend
+### 3. Configure frontend
 
-El `.env.local` ya viene con la configuración correcta para Docker:
+The `.env.local` already comes with correct config for Docker:
 
 ```bash
-# Solo verificar que exista
+# Just verify it exists
 ls frontend-bdt/.env.local || cp frontend-bdt/.env.local.example frontend-bdt/.env.local
 ```
 
-### 4. Generar migraciones e iniciar
+### 4. Run migrations and start
 
 ```bash
-# Construir y levantar containers
+# Build and start containers
 docker compose -f docker-compose.dev.yml up -d
 
-# Ejecutar migraciones de base de datos
+# Run database migrations
 docker compose -f docker-compose.dev.yml exec api alembic upgrade head
 ```
 
-### 5. Abrir la app
+### 5. Open the app
 
-| Servicio | URL |
-|----------|-----|
+| Service | URL |
+|---------|-----|
 | **Frontend** | http://localhost:3001 |
-| **Docs API** | http://localhost:8001/docs |
+| **API Docs** | http://localhost:8001/docs |
 
-### 6. Loguearse
+### 6. Login
 
-Usá tu propio email/password registrado (o creá uno nuevo desde el frontend).
+Use the email/password you registered (or create one new from the frontend).
 
-### 7. Conectar cTrader
+### 7. Connect cTrader
 
-1. Andá a **http://localhost:3001/ctrader**
-2. Hacé clic en **"Conectar con cTrader"**
-3. Se abre un popup con el login de cTrader
-4. Iniciá sesión y autorizá las cuentas
-5. ¡Listo! Ya podés hacer clic en **"Sincronizar"** para importar tus trades reales
+1. Go to **http://localhost:3001/ctrader**
+2. Click **"Conectar con cTrader"**
+3. A popup opens with cTrader login
+4. Login and authorize your accounts
+5. Done! You can now click **"Synchronize"** to import your real trades
 
 ---
 
-## Variables de Entorno
+## Environment Variables
 
 ### `Bakend-bdt/.env`
 
-| Variable | Requerida | Default | Descripción |
-|----------|-----------|---------|-------------|
-| `APP_SECRET_KEY` | ✅ | - | Secret key de la app (mín 32 chars hex) |
-| `DATABASE_URL` | ✅ | - | PostgreSQL async (usa nombre de servicio Docker) |
-| `REDIS_URL` | ✅ | `redis://redis:6379/0` | URL de Redis |
-| `JWT_SECRET_KEY` | ✅ | - | Secret para firmar JWTs |
-| `ENCRYPTION_KEY` | ✅ | - | Key AES-256 para cifrar credenciales |
-| `CTRADER_CLIENT_ID` | ✅* | - | Client ID de tu app cTrader *(ver sección anterior)* |
-| `CTRADER_CLIENT_SECRET` | ✅* | - | Client Secret de tu app cTrader |
-| `CTRADER_REDIRECT_URI` | ❌ | `http://localhost:8001/ctrader/callback` | URI callback OAuth2 |
-| `CORS_ORIGINS` | ❌ | `http://localhost:3000,...` | Orígenes permitidos |
+| Variable | Required | Default | Description |
+|----------|----------|---------|-------------|
+| `APP_SECRET_KEY` | ✅ | - | App secret key (min 32 hex chars) |
+| `DATABASE_URL` | ✅ | - | PostgreSQL async (use Docker service names) |
+| `REDIS_URL` | ✅ | `redis://redis:6379/0` | Redis URL |
+| `JWT_SECRET_KEY` | ✅ | - | Secret for signing JWTs |
+| `ENCRYPTION_KEY` | ✅ | - | AES-256 key for encrypting credentials |
+| `CTRADER_CLIENT_ID` | ✅* | - | Your cTrader app Client ID *(see section below)* |
+| `CTRADER_CLIENT_SECRET` | ✅* | - | Your cTrader app Client Secret |
+| `CTRADER_REDIRECT_URI` | ❌ | `http://localhost:8001/ctrader/callback` | OAuth2 callback URI |
+| `CORS_ORIGINS` | ❌ | `http://localhost:3000,...` | Allowed origins |
 
-### Valores de desarrollo local (Docker):
+### Development values (Docker):
 
 ```bash
 DATABASE_URL=postgresql+asyncpg://brujula:brujula123@db:5432/brujula_db
@@ -232,91 +233,91 @@ REDIS_URL=redis://redis:6379/0
 
 ### `frontend-bdt/.env.local`
 
-| Variable | Default | Descripción |
+| Variable | Default | Description |
 |----------|---------|-------------|
-| `NEXT_PUBLIC_API_URL` | `http://localhost:8001` | URL del backend |
+| `NEXT_PUBLIC_API_URL` | `http://localhost:8001` | Backend URL |
 
 ---
 
-## Cómo usar
+## How to use
 
 ### 1. Dashboard
 
-Muestra tus métricas en tiempo real:
-- Win Rate (% de trades ganadores)
-- PnL Neto (ganancia/pérdida total)
-- Ratio R:R (Risk/Reward)
-- Gráficos de Equity Curve, PnL mensual, sesiones
+Shows real-time metrics:
+- Win Rate (% of winning trades)
+- Net PnL (total gain/loss)
+- R:R Ratio (Risk/Reward)
+- Equity Curve charts, monthly PnL, sessions
 
-### 2. Fuentes de Datos
+### 2. Data Sources
 
-Aquí gestionás tus conexiones con brokers:
-- **Conectar**: Clik en el botón → popup de cTrader → autorización → sync automática
-- **Sincronizar**: Trae todos los trades cerrados de tu cuenta
-- **Ver**: Lista de fuentes conectadas con estado (idle/syncing/error)
+Manage your broker connections:
+- **Connect**: Click button → cTrader popup → authorization → automatic sync
+- **Sync**: Pull all closed trades from your account
+- **View**: List of connected sources with status (idle/syncing/error)
 
-### 3. Análisis
+### 3. Analytics
 
-Detallada por dimensión:
-- Por hora del día (london_open, ny_overlap, ny_session, off_hours)
-- Por día de semana
-- Por mes/año
-- Distribución de resultados (histograma)
-- Rachas (ganadoras/perdedoras consecutivas)
-- Simulaciones (stop loss fijo, mejores horas)
+Detailed breakdown by dimension:
+- By hour of day (london_open, ny_overlap, ny_session, off_hours)
+- By day of week
+- By month/year
+- Result distribution (histogram)
+- Streaks (winning/losing consecutive trades)
+- Simulations (fixed stop loss, best hours)
 
-### 4. Alertas
+### 4. Alerts
 
-Configurá reglas automáticas:
-- Pérdida máxima por trade ($)
-- Racha perdedora
-- Pérdida diaria límite
+Configure automatic rules:
+- Max loss per trade ($)
+- Losing streak
+- Daily loss limit
 
-### 5. Reportes
+### 5. Reports
 
-Exportá tu rendimiento mensual/anual en PDF o CSV.
+Export monthly/yearly performance as PDF or CSV.
 
-### 6. IA
+### 6. AI Engine
 
-Análisis automatizado con modelos de lenguaje (requiere API key de Anthropic/OpenAI/Gemini/Ollama).
+Automated analysis using language models (requires Anthropic/OpenAI/Gemini/Ollama API key).
 
 ---
 
-## Puertos y Servicios
+## Ports & Services
 
-| Servicio | Puerto Externo | Interno | Descripción |
-|----------|----------------|---------|-------------|
-| Frontend (Next.js) | **3001** | 3000 | App web |
+| Service | External Port | Internal | Description |
+|---------|---------------|----------|-------------|
+| Frontend (Next.js) | **3001** | 3000 | Web app |
 | API (FastAPI) | **8001** | 8000 | Backend + Swagger docs |
-| PostgreSQL | **5433** | 5432 | Base de datos |
-| Redis | **6379** | 6379 | Caché + colas |
+| PostgreSQL | **5433** | 5432 | Database |
+| Redis | **6379** | 6379 | Cache + queues |
 
-Los puertos externos están mapeados para evitar conflictos con otros proyectos locales.
+External ports are mapped to avoid conflicts with other local projects.
 
 ---
 
-## Comandos Útiles
+## Useful Commands
 
 ```bash
-# Ver logs del backend
+# View backend logs
 docker compose -f docker-compose.dev.yml logs -f api
 
-# Ver logs del frontend
+# View frontend logs
 docker compose -f docker-compose.dev.yml logs -f web
 
-# Reiniciar solo la API
+# Restart only the API
 docker compose -f docker-compose.dev.yml restart api
 
-# Reconstruir con Dockerfile modificado
+# Rebuild with modified Dockerfile
 docker compose -f docker-compose.dev.yml up -d --build
 
-# Abrir consola de la DB
+# Open DB console
 docker compose -f docker-compose.dev.yml exec db psql -U brujula -d brujula_db
 
-# Detener todo
+# Stop everything
 docker compose -f docker-compose.dev.yml down
 
-# Reset completo (elimina volúmenes)
+# Full reset (removes volumes)
 docker compose -f docker-compose.dev.yml down -v
 ```
 
@@ -326,88 +327,88 @@ docker compose -f docker-compose.dev.yml down -v
 
 ### Error "Application authentication failed: Provided application does not contain provided URI"
 
-1. Verificá que en https://openapi.ctrader.com/apps tu Redirect URI sea EXACTAMENTE: `http://localhost:8001/ctrader/callback`
-2. Sin `/` al final
-3. Con `http://` (no `https://`)
-4. Guardaste los cambios en cTrader antes de intentar conectar
+1. Verify that in https://openapi.ctrader.com/apps your Redirect URI is EXACTLY: `http://localhost:8001/ctrader/callback`
+2. No trailing `/`
+3. Using `http://` (not `https://`)
+4. You saved the changes in cTrader before trying to connect
 
-### Los gráficos aparecen vacíos después de conectar
+### Graphs appear empty after connecting
 
-1. Confirmá que hiciste clic en **"Sincronizar"** después de conectar
-2. Si ya sincronizó y sigue vacío, verificá en consola del navegador (F12) si hay errores
-3. Reintentá: desconecta → conecta nuevamente → sincroniza
+1. Confirm you clicked **"Synchronize"** after connecting
+2. If it synced and still empty, check browser console (F12) for errors
+3. Retry: disconnect → reconnect → sync
 
-### cTrader dice "No accounts found"
+### cTrader says "No accounts found"
 
-1. Verificá que activaste las cuentas en Settings → API Trading de tu plataforma cTrader
-2. El access token debe tener permisos de lectura para esas cuentas
+1. Verify you enabled accounts in Settings → API Trading on your cTrader platform
+2. The access token must have read permissions for those accounts
 
-### "Missing authorization token" al cargar la página
+### "Missing authorization token" when loading page
 
-Verificá que tengas un usuario creado en la base de datos:
+Verify you have a user created in the database:
 ```bash
 docker compose -f docker-compose.dev.yml exec db psql -U brujula -d brujula_db -c "SELECT email FROM users;"
 ```
 
-Si no hay usuarios, registrate desde http://localhost:3001/register
+If no users, register at http://localhost:3001/register
 
-### Errores de CORS en frontend
+### CORS errors in frontend
 
-Verificá que `CORS_ORIGINS` en `.env` incluya `http://localhost:3000` o `http://localhost:3001`.
+Verify `CORS_ORIGINS` in `.env` includes `http://localhost:3000` or `http://localhost:3001`.
 
-### La API no arranca
+### API doesn't start
 
 ```bash
-# Ver logs específicos
+# Check specific logs
 docker compose -f docker-compose.dev.yml logs api
 
-# Si dice "relation does not exist":
+# If it says "relation does not exist":
 docker compose -f docker-compose.dev.yml exec api alembic upgrade head
 ```
 
 ---
 
-## Estructura del Proyecto
+## Project Structure
 
 ```
 brujuladeltrader/
-├── Bakend-bdt/              # Backend FastAPI
+├── Bakend-bdt/              # FastAPI Backend
 │   ├── app/
 │   │   ├── modules/
-│   │   │   ├── auth/        # Login, JWT, registro
-│   │   │   ├── ctrader/     # Conexión cTrader OAuth2
-│   │   │   ├── ai_engine/   # Análisis con IA
-│   │   │   ├── analytics/   # Estadísticas y cálculos
-│   │   │   ├── alerts/      # Alertas de trading
-│   │   │   ├── reports/     # Reportes exportables
+│   │   │   ├── auth/        # Login, JWT, registration
+│   │   │   ├── ctrader/     # cTrader OAuth2 connection
+│   │   │   ├── ai_engine/   # AI-powered analysis
+│   │   │   ├── analytics/   # Statistics and calculations
+│   │   │   ├── alerts/      # Trading alerts
+│   │   │   ├── reports/     # Exportable reports
 │   │   │   └── data_sources/# DataSource + Trade models
-│   │   ├── config.py        # Configuración central
+│   │   ├── config.py        # Central configuration
 │   │   └── main.py          # Entry point
-│   ├── .env.example         # Template de variables
+│   ├── .env.example         # Environment template
 │   └── docker/Dockerfile.dev
-├── frontend-bdt/            # Frontend Next.js 15
+├── frontend-bdt/            # Next.js 15 Frontend
 │   ├── app/                 # App Router
-│   ├── components/          # Componentes React
+│   ├── components/          # React components
 │   ├── lib/                 # Utils, hooks, stores
-│   └── messages/            # Traducciones (ES/EN)
-├── scripts/                 # Scripts utilitarios
-├── openspec/                # Documentos SDD de diseño
-├── docker-compose.dev.yml   # Desarrollo local
-├── docker-compose.prod.yml  # Producción
+│   └── messages/            # Translations (ES/EN)
+├── scripts/                 # Utility scripts
+├── openspec/                # SDD design documents
+├── docker-compose.dev.yml   # Local development
+├── docker-compose.prod.yml  # Production
 └── LICENSE
 ```
 
-> **Nota:** Ya no existen los módulos `parser/` y `uploads/`. La importación de datos se hace exclusivamente vía cTrader OAuth2. Esto facilita agregar nuevos brokers (MetaTrader, Binance, etc.) en el futuro — cada uno será un nuevo provider que cree un `DataSource`.
+> **Note:** The `parser/` and `uploads/` modules no longer exist. Data import is exclusively done via cTrader OAuth2. This makes it easy to add more brokers (MetaTrader, Binance, etc.) in the future — each will be a new provider creating a `DataSource`.
 
 ---
 
-## Licencia
+## License
 
-Este proyecto está bajo la licencia [Apache License 2.0](LICENSE).
+This project is licensed under the [Apache License 2.0](LICENSE).
 
-Podés usar, modificar y distribuir este software libremente, incluyendo uso comercial, siempre que:
-- Mantengas el aviso de copyright
-- Indiques los cambios que hiciste
-- Incluyas la licencia completa
+You are free to use, modify, and distribute this software, including commercial use, as long as you:
+- Keep the copyright notice
+- Indicate any changes you made
+- Include the full license text
 
-Ver [LICENSE](LICENSE) para detalles.
+See [LICENSE](LICENSE) for details.
