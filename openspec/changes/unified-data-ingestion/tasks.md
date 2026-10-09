@@ -26,26 +26,15 @@
 - [x] Update imports — verify no circular dependencies
 
 ### Task 1.2: DataSource Model
-**Files**: `app/modules/data_sources/__init__.py`, `app/modules/data_sources/models.py`
-**Lines**: ~50
+**Files**: `app/modules/data_sources/__init__.py`, `app/modules/data_sources/models.py`, `app/modules/data_sources/schemas.py`
+**Lines**: ~50 + ~60 = ~110
 **Dependencies**: None
+**Status**: ✅ Complete
 
-- [ ] Create `app/modules/data_sources/__init__.py`
-- [ ] Create `app/modules/data_sources/models.py`
-- [ ] Define `DataSource` SQLAlchemy model:
-  - `id` (UUID PK)
-  - `user_id` (UUID FK → users, NOT NULL)
-  - `broker` (VARCHAR(50), NOT NULL) — enum: ctrader, metatrader, binance, ...
-  - `broker_account_id` (VARCHAR(200), NOT NULL)
-  - `name` (VARCHAR(200), NOT NULL)
-  - `sync_status` (VARCHAR(20), default 'idle') — idle | syncing | error
-  - `last_synced_at` (TIMESTAMPTZ, nullable)
-  - `trade_count` (INTEGER, default 0)
-  - `first_trade_at` (TIMESTAMPTZ, nullable)
-  - `last_trade_at` (TIMESTAMPTZ, nullable)
-  - `metadata` (JSONB, default '{}')
-  - `created_at`, `updated_at` (TIMESTAMPTZ)
-  - `UNIQUE(user_id, broker, broker_account_id)`
+- [x] Create `app/modules/data_sources/__init__.py`
+- [x] Create `app/modules/data_sources/models.py`
+- [x] Define `DataSource` SQLAlchemy model with all required fields and constraints
+- [x] Create `app/modules/data_sources/schemas.py` with response and request schemas
 
 ### Task 1.3: DataSource Schemas
 **Files**: `app/modules/data_sources/schemas.py`
