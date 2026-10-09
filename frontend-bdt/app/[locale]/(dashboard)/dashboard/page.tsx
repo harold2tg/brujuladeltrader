@@ -17,7 +17,7 @@ export default function DashboardPage() {
   const t = useTranslations("dashboard");
 
   const { data: dataSourcesData } = useDataSources();
-  const dataSources = dataSourcesData?.data_sources ?? [];
+  const dataSources = dataSourcesData?.data?.items ?? [];
   const latestDataSourceId = dataSources.length > 0 ? dataSources[0].id : null;
 
   const { data: analyticsData, isLoading: analyticsLoading } = useAnalytics(latestDataSourceId);

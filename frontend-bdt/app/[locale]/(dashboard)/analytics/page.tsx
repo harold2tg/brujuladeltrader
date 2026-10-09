@@ -14,7 +14,7 @@ export default function AnalyticsPage() {
   const t = useTranslations("analytics");
   const { data: dataSourcesData, isLoading } = useDataSources();
 
-  const dataSources = dataSourcesData?.data_sources ?? [];
+  const dataSources = dataSourcesData?.data?.items ?? [];
 
   if (isLoading) {
     return (

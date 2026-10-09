@@ -25,7 +25,7 @@ export default function DataSourcesPage() {
               {t("loadError")}
             </div>
           ) : (
-            <DataSourcesList dataSources={data?.data_sources ?? []} />
+            <DataSourcesList dataSources={data?.data?.items ?? []} />
           )}
         </CardContent>
       </Card>
