@@ -12,82 +12,82 @@ import {
   getEquityCurve,
 } from "@/lib/api/analytics";
 
-export function useAnalytics(uploadId: string | null) {
+export function useAnalytics(dataSourceId: string | null) {
   return useQuery({
-    queryKey: ["analytics", uploadId],
-    queryFn: () => getAnalytics(uploadId!),
-    enabled: !!uploadId,
+    queryKey: ["analytics", dataSourceId],
+    queryFn: () => getAnalytics(dataSourceId!),
+    enabled: !!dataSourceId,
   });
 }
 
-export function useAnalyticsByHour(uploadId: string | null) {
+export function useAnalyticsByHour(dataSourceId: string | null) {
   return useQuery({
-    queryKey: ["analytics", uploadId, "by-hour"],
-    queryFn: () => getAnalyticsByHour(uploadId!),
-    enabled: !!uploadId,
+    queryKey: ["analytics", dataSourceId, "by-hour"],
+    queryFn: () => getAnalyticsByHour(dataSourceId!),
+    enabled: !!dataSourceId,
   });
 }
 
-export function useAnalyticsByDay(uploadId: string | null) {
+export function useAnalyticsByDay(dataSourceId: string | null) {
   return useQuery({
-    queryKey: ["analytics", uploadId, "by-day"],
-    queryFn: () => getAnalyticsByDay(uploadId!),
-    enabled: !!uploadId,
+    queryKey: ["analytics", dataSourceId, "by-day"],
+    queryFn: () => getAnalyticsByDay(dataSourceId!),
+    enabled: !!dataSourceId,
   });
 }
 
-export function useAnalyticsBySession(uploadId: string | null) {
+export function useAnalyticsBySession(dataSourceId: string | null) {
   return useQuery({
-    queryKey: ["analytics", uploadId, "by-session"],
-    queryFn: () => getAnalyticsBySession(uploadId!),
-    enabled: !!uploadId,
+    queryKey: ["analytics", dataSourceId, "by-session"],
+    queryFn: () => getAnalyticsBySession(dataSourceId!),
+    enabled: !!dataSourceId,
   });
 }
 
-export function useAnalyticsByMonth(uploadId: string | null) {
+export function useAnalyticsByMonth(dataSourceId: string | null) {
   return useQuery({
-    queryKey: ["analytics", uploadId, "by-month"],
-    queryFn: () => getAnalyticsByMonth(uploadId!),
-    enabled: !!uploadId,
+    queryKey: ["analytics", dataSourceId, "by-month"],
+    queryFn: () => getAnalyticsByMonth(dataSourceId!),
+    enabled: !!dataSourceId,
   });
 }
 
-export function useAnalyticsDistribution(uploadId: string | null) {
+export function useAnalyticsDistribution(dataSourceId: string | null) {
   return useQuery({
-    queryKey: ["analytics", uploadId, "distribution"],
-    queryFn: () => getAnalyticsDistribution(uploadId!),
-    enabled: !!uploadId,
+    queryKey: ["analytics", dataSourceId, "distribution"],
+    queryFn: () => getAnalyticsDistribution(dataSourceId!),
+    enabled: !!dataSourceId,
   });
 }
 
-export function useAnalyticsByWeek(uploadId: string | null) {
+export function useAnalyticsByWeek(dataSourceId: string | null) {
   return useQuery({
-    queryKey: ["analytics", uploadId, "by-week"],
-    queryFn: () => getAnalyticsByWeek(uploadId!),
-    enabled: !!uploadId,
+    queryKey: ["analytics", dataSourceId, "by-week"],
+    queryFn: () => getAnalyticsByWeek(dataSourceId!),
+    enabled: !!dataSourceId,
   });
 }
 
-export function useAnalyticsBySemester(uploadId: string | null) {
+export function useAnalyticsBySemester(dataSourceId: string | null) {
   return useQuery({
-    queryKey: ["analytics", uploadId, "by-semester"],
-    queryFn: () => getAnalyticsBySemester(uploadId!),
-    enabled: !!uploadId,
+    queryKey: ["analytics", dataSourceId, "by-semester"],
+    queryFn: () => getAnalyticsBySemester(dataSourceId!),
+    enabled: !!dataSourceId,
   });
 }
 
-export function useAnalyticsByYear(uploadId: string | null) {
+export function useAnalyticsByYear(dataSourceId: string | null) {
   return useQuery({
-    queryKey: ["analytics", uploadId, "by-year"],
-    queryFn: () => getAnalyticsByYear(uploadId!),
-    enabled: !!uploadId,
+    queryKey: ["analytics", dataSourceId, "by-year"],
+    queryFn: () => getAnalyticsByYear(dataSourceId!),
+    enabled: !!dataSourceId,
   });
 }
 
-export function useEquityCurve(uploadId: string | null) {
+export function useEquityCurve(dataSourceId: string | null) {
   return useQuery({
-    queryKey: ["analytics", uploadId, "equity-curve"],
-    queryFn: () => getEquityCurve(uploadId!),
-    enabled: !!uploadId,
+    queryKey: ["analytics", dataSourceId, "equity-curve"],
+    queryFn: () => getEquityCurve(dataSourceId!),
+    enabled: !!dataSourceId,
   });
 }

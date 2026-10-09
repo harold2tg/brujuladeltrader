@@ -16,7 +16,7 @@
   },
   "nav": {
     "dashboard": "Dashboard",
-    "uploads": "Mis Archivos",
+    "dataSources": "Fuentes de Datos",
     "analytics": "Análisis",
     "ctrader": "cTrader",
     "alerts": "Alertas",
@@ -47,10 +47,10 @@
   },
   "dashboard": {
     "title": "Mi Dashboard",
-    "empty": "No tenés uploads para analizar",
-    "emptyHint": "Subí tu primer archivo de operaciones para ver métricas",
-    "selectUpload": "Ir a Uploads",
-    "latestUpload": "Archivo más reciente: {name}",
+    "empty": "No tenés fuentes de datos para analizar",
+    "emptyHint": "Conectá una fuente de datos para ver métricas",
+    "selectDataSource": "Ir a Fuentes de Datos",
+    "latestDataSource": "Fuente más reciente: {name}",
     "metrics": {
       "winRate": "Win Rate",
       "netPnl": "PnL Neto",
@@ -62,7 +62,7 @@
       "notProfitable": "Tu sistema no es rentable aún"
     },
     "aiDiagnostic": "Diagnóstico IA",
-    "selectUploadDropdown": "Seleccionar archivo",
+    "selectDataSourceDropdown": "Seleccionar fuente",
     "charts": {
       "equityCurve": "Curva de Equity",
       "sessionPnl": "PnL por Sesión"
@@ -70,9 +70,12 @@
   },
   "analytics": {
     "title": "Análisis",
-    "noUpload": "Seleccioná un archivo para analizar",
-    "noUploadHint": "Elegí un archivo de la lista para ver el análisis completo",
-    "goToUploads": "Ir a Uploads",
+    "noDataSource": "Seleccioná una fuente de datos para analizar",
+    "noDataSourceHint": "Elegí una fuente de datos de la lista para ver el análisis completo",
+    "goToDataSources": "Ir a Fuentes de Datos",
+    "selectDataSource": "Seleccioná una fuente de datos para ver el análisis",
+    "noDataSources": "No hay fuentes de datos disponibles",
+    "noDataSourcesHint": "Conectá una fuente de datos para ver el análisis",
     "tabs": {
       "summary": "Resumen",
       "byHour": "Por Hora",
@@ -95,32 +98,26 @@
       "distribution": "Distribución de PnL"
     }
   },
-  "uploads": {
-    "title": "Mis Archivos",
-    "dropzone": "Arrastrá tu archivo CSV o Excel aquí",
-    "dropzoneHint": "o hacé click para seleccionar",
-    "uploading": "Subiendo...",
-    "uploadButton": "Subir",
-    "uploadSuccess": "Archivo subido correctamente",
-    "uploadError": "Error al subir el archivo: ",
-    "invalidType": "Tipo de archivo no válido. Solo se aceptan CSV y Excel.",
-    "invalidSize": "El archivo supera el límite de 10 MB.",
-    "processing": "Procesando {filename}...",
-    "loadError": "Error al cargar los archivos",
+  "dataSources": {
+    "title": "Fuentes de Datos",
+    "loadError": "Error al cargar las fuentes de datos",
     "status": {
       "pending": "Pendiente",
-      "processing": "Procesando",
+      "syncing": "Sincronizando",
       "ready": "Listo",
       "error": "Error"
     },
-    "empty": "No tenés archivos subidos aún",
-    "emptyHint": "Subí tu primer archivo de operaciones para empezar a analizar",
-    "deleteTitle": "Eliminar archivo",
-    "deleteConfirm": "¿Estás seguro que querés eliminar este archivo?",
-    "deleteSuccess": "Archivo eliminado",
+    "empty": "No tenés fuentes de datos aún",
+    "emptyHint": "Conectá tu primera cuenta de broker para empezar a analizar",
+    "deleteTitle": "Eliminar fuente de datos",
+    "deleteConfirm": "¿Estás seguro que querés eliminar esta fuente de datos?",
+    "deleteSuccess": "Fuente de datos eliminada",
     "deleteError": "Error al eliminar: ",
     "trades": "trades",
-    "period": "Período"
+    "lastSync": "Última sync",
+    "sync": "Sincronizar",
+    "syncSuccess": "Sincronización iniciada",
+    "syncError": "Error en la sincronización: "
   },
   "ctrader": {
     "title": "Conexión cTrader",

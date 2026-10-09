@@ -43,11 +43,11 @@ export async function getProviders(): Promise<AIProvider[]> {
 }
 
 export async function startAnalysis(
-  uploadId: string,
+  dataSourceId: string,
   data: { analysis_type: string; language: string },
 ): Promise<AIJob> {
   const response = await apiClient.post<AIJob>(
-    `/ai/analyze/${uploadId}`,
+    `/ai/analyze/${dataSourceId}`,
     data,
   );
   return response.data;
@@ -59,10 +59,10 @@ export async function getJobStatus(jobId: string): Promise<AIJobStatus> {
 }
 
 export async function getInsights(
-  uploadId: string,
+  dataSourceId: string,
 ): Promise<AIInsightsResponse> {
   const response = await apiClient.get<AIInsightsResponse>(
-    `/ai/insights/${uploadId}`,
+    `/ai/insights/${dataSourceId}`,
   );
   return response.data;
 }

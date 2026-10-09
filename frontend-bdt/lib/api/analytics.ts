@@ -172,65 +172,65 @@ export interface YearlyAnalyticsResponse {
 // API functions
 // ---------------------------------------------------------------------------
 
-export async function getAnalytics(uploadId: string): Promise<AnalyticsResponse> {
+export async function getAnalytics(dataSourceId: string): Promise<AnalyticsResponse> {
   const response = await apiClient.get<AnalyticsResponse>(
-    `/analytics/${uploadId}`,
+    `/analytics/${dataSourceId}`,
   );
   return response.data;
 }
 
-export async function getAnalyticsByHour(uploadId: string): Promise<HourAnalyticsResponse> {
+export async function getAnalyticsByHour(dataSourceId: string): Promise<HourAnalyticsResponse> {
   const response = await apiClient.get<HourAnalyticsResponse>(
-    `/analytics/${uploadId}/by-hour`,
+    `/analytics/${dataSourceId}/by-hour`,
   );
   return response.data;
 }
 
-export async function getAnalyticsByDay(uploadId: string): Promise<DayAnalyticsResponse> {
+export async function getAnalyticsByDay(dataSourceId: string): Promise<DayAnalyticsResponse> {
   const response = await apiClient.get<DayAnalyticsResponse>(
-    `/analytics/${uploadId}/by-day`,
+    `/analytics/${dataSourceId}/by-day`,
   );
   return response.data;
 }
 
-export async function getAnalyticsBySession(uploadId: string): Promise<SessionAnalyticsResponse> {
+export async function getAnalyticsBySession(dataSourceId: string): Promise<SessionAnalyticsResponse> {
   const response = await apiClient.get<SessionAnalyticsResponse>(
-    `/analytics/${uploadId}/by-session`,
+    `/analytics/${dataSourceId}/by-session`,
   );
   return response.data;
 }
 
-export async function getAnalyticsByMonth(uploadId: string): Promise<MonthlyAnalyticsResponse> {
+export async function getAnalyticsByMonth(dataSourceId: string): Promise<MonthlyAnalyticsResponse> {
   const response = await apiClient.get<MonthlyAnalyticsResponse>(
-    `/analytics/${uploadId}/by-month`,
+    `/analytics/${dataSourceId}/by-month`,
   );
   return response.data;
 }
 
-export async function getAnalyticsDistribution(uploadId: string): Promise<DistributionAnalyticsResponse> {
+export async function getAnalyticsDistribution(dataSourceId: string): Promise<DistributionAnalyticsResponse> {
   const response = await apiClient.get<DistributionAnalyticsResponse>(
-    `/analytics/${uploadId}/distribution`,
+    `/analytics/${dataSourceId}/distribution`,
   );
   return response.data;
 }
 
-export async function getAnalyticsByWeek(uploadId: string): Promise<WeeklyAnalyticsResponse> {
+export async function getAnalyticsByWeek(dataSourceId: string): Promise<WeeklyAnalyticsResponse> {
   const response = await apiClient.get<WeeklyAnalyticsResponse>(
-    `/analytics/${uploadId}/by-week`,
+    `/analytics/${dataSourceId}/by-week`,
   );
   return response.data;
 }
 
-export async function getAnalyticsBySemester(uploadId: string): Promise<SemesterAnalyticsResponse> {
+export async function getAnalyticsBySemester(dataSourceId: string): Promise<SemesterAnalyticsResponse> {
   const response = await apiClient.get<SemesterAnalyticsResponse>(
-    `/analytics/${uploadId}/by-semester`,
+    `/analytics/${dataSourceId}/by-semester`,
   );
   return response.data;
 }
 
-export async function getAnalyticsByYear(uploadId: string): Promise<YearlyAnalyticsResponse> {
+export async function getAnalyticsByYear(dataSourceId: string): Promise<YearlyAnalyticsResponse> {
   const response = await apiClient.get<YearlyAnalyticsResponse>(
-    `/analytics/${uploadId}/by-year`,
+    `/analytics/${dataSourceId}/by-year`,
   );
   return response.data;
 }
@@ -251,9 +251,9 @@ export interface EquityCurveResponse {
   data: EquityCurvePoint[];
 }
 
-export async function getEquityCurve(uploadId: string): Promise<EquityCurveResponse> {
+export async function getEquityCurve(dataSourceId: string): Promise<EquityCurveResponse> {
   const response = await apiClient.get<EquityCurveResponse>(
-    `/analytics/${uploadId}/equity-curve`,
+    `/analytics/${dataSourceId}/equity-curve`,
   );
   return response.data;
 }

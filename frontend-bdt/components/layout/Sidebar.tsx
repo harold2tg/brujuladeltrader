@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
 import {
   LayoutDashboard,
-  Upload,
+  Database,
   BarChart3,
   TrendingUp,
   Bell,
@@ -25,7 +25,7 @@ interface NavItem {
 
 const navItems: NavItem[] = [
   { href: "/dashboard", icon: LayoutDashboard, labelKey: "nav.dashboard" },
-  { href: "/uploads", icon: Upload, labelKey: "nav.uploads" },
+  { href: "/data-sources", icon: Database, labelKey: "nav.dataSources" },
   { href: "/analytics", icon: BarChart3, labelKey: "nav.analytics" },
   { href: "/ctrader", icon: TrendingUp, labelKey: "nav.ctrader" },
   { href: "/alerts", icon: Bell, labelKey: "nav.alerts" },

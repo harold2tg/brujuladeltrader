@@ -16,7 +16,7 @@
   },
   "nav": {
     "dashboard": "Dashboard",
-    "uploads": "My Files",
+    "dataSources": "Data Sources",
     "analytics": "Analytics",
     "ctrader": "cTrader",
     "alerts": "Alerts",
@@ -47,10 +47,10 @@
   },
   "dashboard": {
     "title": "My Dashboard",
-    "empty": "No uploads to analyze yet",
-    "emptyHint": "Upload your first trading file to see metrics",
-    "selectUpload": "Go to Uploads",
-    "latestUpload": "Latest upload: {name}",
+    "empty": "No data sources to analyze yet",
+    "emptyHint": "Connect a data source to see metrics",
+    "selectDataSource": "Go to Data Sources",
+    "latestDataSource": "Latest data source: {name}",
     "metrics": {
       "winRate": "Win Rate",
       "netPnl": "Net PnL",
@@ -62,7 +62,7 @@
       "notProfitable": "Your system is not profitable yet"
     },
     "aiDiagnostic": "AI Diagnostic",
-    "selectUploadDropdown": "Select file",
+    "selectDataSourceDropdown": "Select data source",
     "charts": {
       "equityCurve": "Equity Curve",
       "sessionPnl": "PnL by Session"
@@ -70,9 +70,12 @@
   },
   "analytics": {
     "title": "Analytics",
-    "noUpload": "Select a file to analyze",
-    "noUploadHint": "Choose a file from the list to see the full analysis",
-    "goToUploads": "Go to Uploads",
+    "noDataSource": "Select a data source to analyze",
+    "noDataSourceHint": "Choose a data source from the list to see the full analysis",
+    "goToDataSources": "Go to Data Sources",
+    "selectDataSource": "Select a data source to view analytics",
+    "noDataSources": "No data sources available",
+    "noDataSourcesHint": "Connect a data source to see analytics",
     "tabs": {
       "summary": "Summary",
       "byHour": "By Hour",
@@ -95,32 +98,26 @@
       "distribution": "PnL Distribution"
     }
   },
-  "uploads": {
-    "title": "My Files",
-    "dropzone": "Drag your CSV or Excel file here",
-    "dropzoneHint": "or click to select",
-    "uploading": "Uploading...",
-    "uploadButton": "Upload",
-    "uploadSuccess": "File uploaded successfully",
-    "uploadError": "Error uploading file: ",
-    "invalidType": "Invalid file type. Only CSV and Excel files are accepted.",
-    "invalidSize": "File exceeds the 10 MB limit.",
-    "processing": "Processing {filename}...",
-    "loadError": "Error loading files",
+  "dataSources": {
+    "title": "Data Sources",
+    "loadError": "Error loading data sources",
     "status": {
       "pending": "Pending",
-      "processing": "Processing",
+      "syncing": "Syncing",
       "ready": "Ready",
       "error": "Error"
     },
-    "empty": "You don't have any uploaded files yet",
-    "emptyHint": "Upload your first trading file to start analyzing",
-    "deleteTitle": "Delete file",
-    "deleteConfirm": "Are you sure you want to delete this file?",
-    "deleteSuccess": "File deleted",
+    "empty": "You don't have any data sources yet",
+    "emptyHint": "Connect your first broker account to start analyzing",
+    "deleteTitle": "Delete data source",
+    "deleteConfirm": "Are you sure you want to delete this data source?",
+    "deleteSuccess": "Data source deleted",
     "deleteError": "Error deleting: ",
     "trades": "trades",
-    "period": "Period"
+    "lastSync": "Last sync",
+    "sync": "Sync now",
+    "syncSuccess": "Sync started",
+    "syncError": "Sync error: "
   },
   "ctrader": {
     "title": "cTrader Connection",

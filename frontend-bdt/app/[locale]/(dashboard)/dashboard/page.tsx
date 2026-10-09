@@ -1,7 +1,7 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { Activity, Upload } from "lucide-react";
+import { Activity, Database } from "lucide-react";
 import Link from "next/link";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { buttonVariants } from "@/components/ui/button";
@@ -11,33 +11,33 @@ import { MonthlyPnlChart } from "@/components/charts/MonthlyPnlChart";
 import { SessionPnlBarChart } from "@/components/charts/SessionPnlBarChart";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { useAnalytics, useAnalyticsByMonth, useAnalyticsBySession, useEquityCurve } from "@/lib/hooks/useAnalytics";
-import { useUploads } from "@/lib/hooks/useUploads";
+import { useDataSources } from "@/lib/hooks/useDataSources";
 
 export default function DashboardPage() {
   const t = useTranslations("dashboard");
 
-  const { data: uploadsData } = useUploads();
-  const uploads = uploadsData?.data?.items ?? [];
-  const latestUploadId = uploads.length > 0 ? uploads[0].id : null;
+  const { data: dataSourcesData } = useDataSources();
+  const dataSources = dataSourcesData?.data_sources ?? [];
+  const latestDataSourceId = dataSources.length > 0 ? dataSources[0].id : null;
 
-  const { data: analyticsData, isLoading: analyticsLoading } = useAnalytics(latestUploadId);
-  const { data: equityData, isLoading: equityLoading } = useEquityCurve(latestUploadId);
-  const { data: monthlyData, isLoading: monthlyLoading } = useAnalyticsByMonth(latestUploadId);
-  const { data: sessionData, isLoading: sessionLoading } = useAnalyticsBySession(latestUploadId);
+  const { data: analyticsData, isLoading: analyticsLoading } = useAnalytics(latestDataSourceId);
+  const { data: equityData, isLoading: equityLoading } = useEquityCurve(latestDataSourceId);
+  const { data: monthlyData, isLoading: monthlyLoading } = useAnalyticsByMonth(latestDataSourceId);
+  const { data: sessionData, isLoading: sessionLoading } = useAnalyticsBySession(latestDataSourceId);
 
   const metrics = analyticsData?.data?.global;
 
-  if (uploads.length === 0) {
+  if (dataSources.length === 0) {
     return (
       <div className="space-y-6">
         <PageHeader title={t("title")} />
         <EmptyState
-          icon={<Upload />}
+          icon={<Database />}
           title={t("empty")}
           description={t("emptyHint")}
           action={
-            <Link href="/uploads" className={buttonVariants()}>
-              {t("selectUpload")}
+            <Link href="/data-sources" className={buttonVariants()}>
+              {t("selectDataSource")}
             </Link>
           }
         />
@@ -49,7 +49,7 @@ export default function DashboardPage() {
     <div className="space-y-6">
       <PageHeader
         title={t("title")}
-        description={t("latestUpload", { name: uploads[0]?.original_name })}
+        description={t("latestDataSource", { name: dataSources[0]?.name })}
       />
 
       {/* Quick diagnostic banner */}

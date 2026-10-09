@@ -2,7 +2,7 @@
 
 import { useTranslations } from "next-intl";
 import { useParams } from "next/navigation";
-import { Upload } from "lucide-react";
+import { Database } from "lucide-react";
 import Link from "next/link";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { buttonVariants } from "@/components/ui/button";
@@ -39,49 +39,49 @@ type TabValue =
   | "by-year"
   | "distribution";
 
-export default function AnalyticsPage() {
+export default function AnalyticsDetailPage() {
   const t = useTranslations("analytics");
   const params = useParams();
-  const uploadId = params.uploadId as string;
+  const dataSourceId = params.dataSourceId as string;
 
   const [activeTab, setActiveTab] = useState<TabValue>("summary");
 
-  const { data: analyticsData, isLoading: analyticsLoading } = useAnalytics(uploadId);
+  const { data: analyticsData, isLoading: analyticsLoading } = useAnalytics(dataSourceId);
   const { data: hourlyData, isLoading: hourlyLoading } = useAnalyticsByHour(
-    activeTab === "by-hour" ? uploadId : null,
+    activeTab === "by-hour" ? dataSourceId : null,
   );
   const { data: dailyData, isLoading: dailyLoading } = useAnalyticsByDay(
-    activeTab === "by-day" ? uploadId : null,
+    activeTab === "by-day" ? dataSourceId : null,
   );
   const { data: sessionData, isLoading: sessionLoading } = useAnalyticsBySession(
-    activeTab === "by-session" ? uploadId : null,
+    activeTab === "by-session" ? dataSourceId : null,
   );
   const { data: monthlyData, isLoading: monthlyLoading } = useAnalyticsByMonth(
-    activeTab === "by-month" ? uploadId : null,
+    activeTab === "by-month" ? dataSourceId : null,
   );
   const { data: weeklyData, isLoading: weeklyLoading } = useAnalyticsByWeek(
-    activeTab === "by-week" ? uploadId : null,
+    activeTab === "by-week" ? dataSourceId : null,
   );
   const { data: semesterData, isLoading: semesterLoading } = useAnalyticsBySemester(
-    activeTab === "by-semester" ? uploadId : null,
+    activeTab === "by-semester" ? dataSourceId : null,
   );
   const { data: yearlyData, isLoading: yearlyLoading } = useAnalyticsByYear(
-    activeTab === "by-year" ? uploadId : null,
+    activeTab === "by-year" ? dataSourceId : null,
   );
   const { data: distributionData, isLoading: distributionLoading } =
-    useAnalyticsDistribution(activeTab === "distribution" ? uploadId : null);
+    useAnalyticsDistribution(activeTab === "distribution" ? dataSourceId : null);
 
-  if (!uploadId) {
+  if (!dataSourceId) {
     return (
       <div className="space-y-6">
         <PageHeader title={t("title")} />
         <EmptyState
-          icon={<Upload />}
-          title={t("noUpload")}
-          description={t("noUploadHint")}
+          icon={<Database />}
+          title={t("noDataSource")}
+          description={t("noDataSourceHint")}
           action={
-            <Link href="/uploads" className={buttonVariants()}>
-              {t("goToUploads")}
+            <Link href="/data-sources" className={buttonVariants()}>
+              {t("goToDataSources")}
             </Link>
           }
         />

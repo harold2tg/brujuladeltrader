@@ -1,30 +1,23 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { useQuery } from "@tanstack/react-query";
-import { getUploads } from "@/lib/api/uploads";
 import { PageHeader } from "@/components/layout/PageHeader";
-import { UploadDropzone } from "@/components/uploads/UploadDropzone";
-import { UploadsList } from "@/components/uploads/UploadsList";
+import { DataSourcesList } from "@/components/data-sources/DataSourcesList";
 import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
 import { Card, CardContent } from "@/components/ui/card";
+import { useDataSources } from "@/lib/hooks/useDataSources";
 
-export default function UploadsPage() {
-  const t = useTranslations("uploads");
+export default function DataSourcesPage() {
+  const t = useTranslations("dataSources");
 
-  const { data, isLoading, error } = useQuery({
-    queryKey: ["uploads"],
-    queryFn: getUploads,
-  });
+  const { data, isLoading, error } = useDataSources();
 
   return (
     <div className="space-y-6">
       <PageHeader title={t("title")} />
 
-      <UploadDropzone />
-
       <Card className="border-border/40">
-        <CardContent>
+        <CardContent className="pt-6">
           {isLoading ? (
             <LoadingSpinner className="py-12" />
           ) : error ? (
@@ -32,7 +25,7 @@ export default function UploadsPage() {
               {t("loadError")}
             </div>
           ) : (
-            <UploadsList uploads={data?.data?.items ?? []} />
+            <DataSourcesList dataSources={data?.data_sources ?? []} />
           )}
         </CardContent>
       </Card>
