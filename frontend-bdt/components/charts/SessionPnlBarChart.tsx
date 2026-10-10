@@ -14,7 +14,7 @@ import {
 } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { CHART_COLORS } from "@/lib/utils/colors";
+import { PALETTE, LOSS_COLOR, PROFIT_COLOR } from "@/lib/utils/colors";
 import { formatCurrency } from "@/lib/utils/formatters";
 import { CHART_TOOLTIP_STYLE } from "@/lib/utils/chartStyles";
 import type { SessionMetrics } from "@/lib/api/analytics";
@@ -31,16 +31,10 @@ const SESSION_LABELS: Record<string, string> = {
   off_hours: "Off Hours",
 };
 
-const SESSION_COLORS: Record<string, string> = {
-  london_open: CHART_COLORS.london,
-  ny_overlap: CHART_COLORS.overlap,
-  ny_session: CHART_COLORS.ny,
-  off_hours: CHART_COLORS.off,
-};
-
-function getBarColor(pnl: number, session: string): string {
-  if (pnl >= 0) return CHART_COLORS.positive;
-  return CHART_COLORS.negative;
+function getBarColor(pnl: number): string {
+  // Session bars are profit/loss series: teal above zero, red below.
+  if (pnl >= 0) return PROFIT_COLOR;
+  return LOSS_COLOR;
 }
 
 export function SessionPnlBarChart({ data, loading }: SessionPnlBarChartProps) {
@@ -62,7 +56,6 @@ export function SessionPnlBarChart({ data, loading }: SessionPnlBarChartProps) {
   const chartData = (data ?? []).map((item) => ({
     session: SESSION_LABELS[item.session] ?? item.session,
     net_pnl: item.net_pnl,
-    raw_session: item.session,
     total_trades: item.total_trades,
     win_rate: item.win_rate,
   }));
@@ -75,15 +68,18 @@ export function SessionPnlBarChart({ data, loading }: SessionPnlBarChartProps) {
       <CardContent>
         <ResponsiveContainer width="100%" height={300}>
           <BarChart data={chartData}>
-            <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+            <CartesianGrid strokeDasharray="3 3" stroke={PALETTE.border} strokeOpacity={0.5} />
             <XAxis
               dataKey="session"
-              tick={{ fontSize: 12 }}
-              className="text-muted-foreground"
+              tick={{ fontSize: 12, fill: PALETTE.mutedForeground }}
+              axisLine={{ stroke: PALETTE.border }}
+              tickLine={{ stroke: PALETTE.border }}
             />
             <YAxis
-              tick={{ fontSize: 12 }}
-              className="text-muted-foreground"
+              tick={{ fontSize: 12, fill: PALETTE.mutedForeground }}
+              axisLine={{ stroke: PALETTE.border }}
+              tickLine={{ stroke: PALETTE.border }}
+              className="font-mono"
               tickFormatter={(v: number) => formatCurrency(v)}
             />
             <Tooltip
@@ -93,10 +89,15 @@ export function SessionPnlBarChart({ data, loading }: SessionPnlBarChartProps) {
               ]}
               {...CHART_TOOLTIP_STYLE}
             />
-            <ReferenceLine y={0} stroke="#64748b" strokeDasharray="3 3" />
+            <ReferenceLine
+              y={0}
+              stroke={PALETTE.mutedForeground}
+              strokeOpacity={0.5}
+              strokeDasharray="3 3"
+            />
             <Bar dataKey="net_pnl" radius={[4, 4, 0, 0]}>
               {chartData.map((entry, index) => (
-                <Cell key={`cell-${index}`} fill={getBarColor(entry.net_pnl, entry.raw_session)} />
+                <Cell key={`cell-${index}`} fill={getBarColor(entry.net_pnl)} />
               ))}
             </Bar>
           </BarChart>

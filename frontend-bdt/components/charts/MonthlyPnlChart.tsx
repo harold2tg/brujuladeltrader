@@ -13,7 +13,7 @@ import {
 } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { CHART_COLORS } from "@/lib/utils/colors";
+import { PALETTE, CHART_COLORS, LOSS_COLOR, PROFIT_COLOR } from "@/lib/utils/colors";
 import { formatCurrency } from "@/lib/utils/formatters";
 import { CHART_TOOLTIP_STYLE } from "@/lib/utils/chartStyles";
 import type { MonthlyMetrics } from "@/lib/api/analytics";
@@ -24,8 +24,8 @@ interface MonthlyPnlChartProps {
 }
 
 function getBarColor(pnl: number): string {
-  if (pnl > 0) return CHART_COLORS.positive;
-  if (pnl < 0) return CHART_COLORS.negative;
+  if (pnl > 0) return PROFIT_COLOR;
+  if (pnl < 0) return LOSS_COLOR;
   return CHART_COLORS.neutral;
 }
 
@@ -34,7 +34,7 @@ export function MonthlyPnlChart({ data, loading }: MonthlyPnlChartProps) {
 
   if (loading) {
     return (
-      <Card>
+      <Card className="border-border/40">
         <CardHeader>
           <CardTitle className="text-base">{t("monthlyPnl")}</CardTitle>
         </CardHeader>
@@ -51,22 +51,25 @@ export function MonthlyPnlChart({ data, loading }: MonthlyPnlChartProps) {
   }));
 
   return (
-    <Card>
+    <Card className="border-border/40">
       <CardHeader>
         <CardTitle className="text-base">{t("monthlyPnl")}</CardTitle>
       </CardHeader>
       <CardContent>
         <ResponsiveContainer width="100%" height={300}>
           <BarChart data={chartData}>
-            <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+            <CartesianGrid strokeDasharray="3 3" stroke={PALETTE.border} strokeOpacity={0.5} />
             <XAxis
               dataKey="month"
-              tick={{ fontSize: 12 }}
-              className="text-muted-foreground"
+              tick={{ fontSize: 12, fill: PALETTE.mutedForeground }}
+              axisLine={{ stroke: PALETTE.border }}
+              tickLine={{ stroke: PALETTE.border }}
             />
             <YAxis
-              tick={{ fontSize: 12 }}
-              className="text-muted-foreground"
+              tick={{ fontSize: 12, fill: PALETTE.mutedForeground }}
+              axisLine={{ stroke: PALETTE.border }}
+              tickLine={{ stroke: PALETTE.border }}
+              className="font-mono"
               tickFormatter={(v: number) => formatCurrency(v)}
             />
             <Tooltip

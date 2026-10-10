@@ -11,7 +11,7 @@ import {
 } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { CHART_COLORS } from "@/lib/utils/colors";
+import { CHART_COLORS, PALETTE } from "@/lib/utils/colors";
 import { formatCurrency } from "@/lib/utils/formatters";
 import { CHART_TOOLTIP_STYLE } from "@/lib/utils/chartStyles";
 import type { SessionMetrics } from "@/lib/api/analytics";
@@ -21,6 +21,7 @@ interface SessionPieChartProps {
   loading?: boolean;
 }
 
+// Session slices keep the semantic session colors declared in the palette.
 const SESSION_COLORS: Record<string, string> = {
   london_open: CHART_COLORS.london,
   ny_overlap: CHART_COLORS.overlap,
@@ -40,7 +41,7 @@ export function SessionPieChart({ data, loading }: SessionPieChartProps) {
 
   if (loading) {
     return (
-      <Card>
+      <Card className="border-border/40">
         <CardHeader>
           <CardTitle className="text-base">{t("bySession")}</CardTitle>
         </CardHeader>
@@ -59,7 +60,7 @@ export function SessionPieChart({ data, loading }: SessionPieChartProps) {
   }));
 
   return (
-    <Card>
+    <Card className="border-border/40">
       <CardHeader>
         <CardTitle className="text-base">{t("bySession")}</CardTitle>
       </CardHeader>
@@ -74,6 +75,9 @@ export function SessionPieChart({ data, loading }: SessionPieChartProps) {
               outerRadius={100}
               paddingAngle={2}
               dataKey="value"
+              // Slice separators: card background keeps the donut reading as one panel.
+              stroke={PALETTE.card}
+              strokeWidth={2}
             >
               {chartData.map((entry, index) => (
                 <Cell key={`cell-${index}`} fill={entry.fill} />
@@ -86,7 +90,7 @@ export function SessionPieChart({ data, loading }: SessionPieChartProps) {
               ]}
               {...CHART_TOOLTIP_STYLE}
             />
-            <Legend />
+            <Legend wrapperStyle={{ fontSize: 12, color: "var(--muted-foreground)" }} />
           </PieChart>
         </ResponsiveContainer>
       </CardContent>

@@ -13,7 +13,7 @@ import {
 } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { CHART_COLORS } from "@/lib/utils/colors";
+import { PALETTE, CHART_COLORS, LOSS_COLOR, PROFIT_COLOR } from "@/lib/utils/colors";
 import { CHART_TOOLTIP_STYLE } from "@/lib/utils/chartStyles";
 import type { DistributionBin } from "@/lib/api/analytics";
 
@@ -25,10 +25,10 @@ interface DistributionChartProps {
 function getBarColor(range: string): string {
   if (range.startsWith("<") || range.startsWith("-")) {
     const num = parseFloat(range.replace(/[<>]/g, "").split("/")[0]);
-    if (num < -5) return CHART_COLORS.negative;
+    if (num < -5) return LOSS_COLOR;
   }
   if (range.startsWith(">") || (!range.startsWith("-") && !range.startsWith("<"))) {
-    return CHART_COLORS.positive;
+    return PROFIT_COLOR;
   }
   return CHART_COLORS.neutral;
 }
@@ -38,7 +38,7 @@ export function DistributionChart({ data, loading }: DistributionChartProps) {
 
   if (loading) {
     return (
-      <Card>
+      <Card className="border-border/40">
         <CardHeader>
           <CardTitle className="text-base">{t("distribution")}</CardTitle>
         </CardHeader>
@@ -56,22 +56,25 @@ export function DistributionChart({ data, loading }: DistributionChartProps) {
   }));
 
   return (
-    <Card>
+    <Card className="border-border/40">
       <CardHeader>
         <CardTitle className="text-base">{t("distribution")}</CardTitle>
       </CardHeader>
       <CardContent>
         <ResponsiveContainer width="100%" height={300}>
           <BarChart data={chartData}>
-            <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+            <CartesianGrid strokeDasharray="3 3" stroke={PALETTE.border} strokeOpacity={0.5} />
             <XAxis
               dataKey="range"
-              tick={{ fontSize: 12 }}
-              className="text-muted-foreground"
+              tick={{ fontSize: 12, fill: PALETTE.mutedForeground }}
+              axisLine={{ stroke: PALETTE.border }}
+              tickLine={{ stroke: PALETTE.border }}
             />
             <YAxis
-              tick={{ fontSize: 12 }}
-              className="text-muted-foreground"
+              tick={{ fontSize: 12, fill: PALETTE.mutedForeground }}
+              axisLine={{ stroke: PALETTE.border }}
+              tickLine={{ stroke: PALETTE.border }}
+              className="font-mono"
             />
             <Tooltip
               formatter={(value) => [String(value), "Trades"]}

@@ -1,6 +1,5 @@
 "use client";
 
-import { useTranslations } from "next-intl";
 import {
   BarChart,
   Bar,
@@ -14,7 +13,7 @@ import {
 } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { CHART_COLORS } from "@/lib/utils/colors";
+import { PALETTE, CHART_COLORS, LOSS_COLOR, PROFIT_COLOR } from "@/lib/utils/colors";
 import { formatCurrency } from "@/lib/utils/formatters";
 import { CHART_TOOLTIP_STYLE } from "@/lib/utils/chartStyles";
 
@@ -35,17 +34,15 @@ interface BreakdownChartProps {
 }
 
 function getBarColor(pnl: number): string {
-  if (pnl > 0) return CHART_COLORS.positive;
-  if (pnl < 0) return CHART_COLORS.negative;
+  if (pnl > 0) return PROFIT_COLOR;
+  if (pnl < 0) return LOSS_COLOR;
   return CHART_COLORS.neutral;
 }
 
 export function BreakdownChart({ title, data, loading }: BreakdownChartProps) {
-  const t = useTranslations("analytics.charts");
-
   if (loading) {
     return (
-      <Card>
+      <Card className="border-border/40">
         <CardHeader>
           <CardTitle className="text-base">{title}</CardTitle>
         </CardHeader>
@@ -64,30 +61,35 @@ export function BreakdownChart({ title, data, loading }: BreakdownChartProps) {
   }));
 
   return (
-    <Card>
+    <Card className="border-border/40">
       <CardHeader>
         <CardTitle className="text-base">{title}</CardTitle>
       </CardHeader>
       <CardContent>
         <ResponsiveContainer width="100%" height={300}>
           <BarChart data={chartData}>
-            <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+            <CartesianGrid strokeDasharray="3 3" stroke={PALETTE.border} strokeOpacity={0.5} />
             <XAxis
               dataKey="label"
-              tick={{ fontSize: 12 }}
-              className="text-muted-foreground"
+              tick={{ fontSize: 12, fill: PALETTE.mutedForeground }}
+              axisLine={{ stroke: PALETTE.border }}
+              tickLine={{ stroke: PALETTE.border }}
             />
             <YAxis
               yAxisId="pnl"
-              tick={{ fontSize: 12 }}
-              className="text-muted-foreground"
+              tick={{ fontSize: 12, fill: PALETTE.mutedForeground }}
+              axisLine={{ stroke: PALETTE.border }}
+              tickLine={{ stroke: PALETTE.border }}
+              className="font-mono"
               tickFormatter={(v: number) => formatCurrency(v)}
             />
             <YAxis
               yAxisId="wr"
               orientation="right"
-              tick={{ fontSize: 12 }}
-              className="text-muted-foreground"
+              tick={{ fontSize: 12, fill: PALETTE.mutedForeground }}
+              axisLine={{ stroke: PALETTE.border }}
+              tickLine={{ stroke: PALETTE.border }}
+              className="font-mono"
               tickFormatter={(v: number) => `${(v * 100).toFixed(0)}%`}
               domain={[0, 1]}
             />
@@ -99,13 +101,20 @@ export function BreakdownChart({ title, data, loading }: BreakdownChartProps) {
               }}
               {...CHART_TOOLTIP_STYLE}
             />
-            <Legend />
+            <Legend wrapperStyle={{ fontSize: 12, color: "var(--muted-foreground)" }} />
             <Bar yAxisId="pnl" dataKey="net_pnl" name="PnL" radius={[4, 4, 0, 0]}>
               {chartData.map((entry, index) => (
                 <Cell key={`cell-${index}`} fill={getBarColor(entry.net_pnl)} />
               ))}
             </Bar>
-            <Bar yAxisId="wr" dataKey="win_rate" name="Win Rate" fill={CHART_COLORS.neutral} radius={[4, 4, 0, 0]} opacity={0.6} />
+            <Bar
+              yAxisId="wr"
+              dataKey="win_rate"
+              name="Win Rate"
+              fill={CHART_COLORS.neutral}
+              radius={[4, 4, 0, 0]}
+              opacity={0.6}
+            />
           </BarChart>
         </ResponsiveContainer>
       </CardContent>

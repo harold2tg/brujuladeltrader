@@ -13,7 +13,7 @@ import {
 } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { CHART_COLORS } from "@/lib/utils/colors";
+import { PALETTE, CHART_COLORS, LOSS_COLOR, PROFIT_COLOR } from "@/lib/utils/colors";
 import { formatPercent } from "@/lib/utils/formatters";
 import { CHART_TOOLTIP_STYLE } from "@/lib/utils/chartStyles";
 import type { DayMetrics } from "@/lib/api/analytics";
@@ -26,8 +26,11 @@ interface WinRateByDayChartProps {
 const DAY_NAMES = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
 function getBarColor(winRate: number): string {
-  if (winRate >= 0.5) return CHART_COLORS.positive;
-  return CHART_COLORS.negative;
+  // 50% is the break-even threshold: above it the day is profitable-looking (teal),
+  // below it it loses (red), exactly at it is neutral slate.
+  if (winRate > 0.5) return PROFIT_COLOR;
+  if (winRate < 0.5) return LOSS_COLOR;
+  return CHART_COLORS.neutral;
 }
 
 export function WinRateByDayChart({ data, loading }: WinRateByDayChartProps) {
@@ -35,7 +38,7 @@ export function WinRateByDayChart({ data, loading }: WinRateByDayChartProps) {
 
   if (loading) {
     return (
-      <Card>
+      <Card className="border-border/40">
         <CardHeader>
           <CardTitle className="text-base">{t("winRateByDay")}</CardTitle>
         </CardHeader>
@@ -56,22 +59,25 @@ export function WinRateByDayChart({ data, loading }: WinRateByDayChartProps) {
   });
 
   return (
-    <Card>
+    <Card className="border-border/40">
       <CardHeader>
         <CardTitle className="text-base">{t("winRateByDay")}</CardTitle>
       </CardHeader>
       <CardContent>
         <ResponsiveContainer width="100%" height={300}>
           <BarChart data={chartData}>
-            <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+            <CartesianGrid strokeDasharray="3 3" stroke={PALETTE.border} strokeOpacity={0.5} />
             <XAxis
               dataKey="day"
-              tick={{ fontSize: 12 }}
-              className="text-muted-foreground"
+              tick={{ fontSize: 12, fill: PALETTE.mutedForeground }}
+              axisLine={{ stroke: PALETTE.border }}
+              tickLine={{ stroke: PALETTE.border }}
             />
             <YAxis
-              tick={{ fontSize: 12 }}
-              className="text-muted-foreground"
+              tick={{ fontSize: 12, fill: PALETTE.mutedForeground }}
+              axisLine={{ stroke: PALETTE.border }}
+              tickLine={{ stroke: PALETTE.border }}
+              className="font-mono"
               tickFormatter={(v: number) => formatPercent(v)}
               domain={[0, 1]}
             />

@@ -15,6 +15,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatCurrency } from "@/lib/utils/formatters";
 import { CHART_TOOLTIP_STYLE } from "@/lib/utils/chartStyles";
+import { CHART_GRADIENTS, PALETTE, PROFIT_COLOR } from "@/lib/utils/colors";
 import type { EquityCurvePoint } from "@/lib/api/analytics";
 
 interface EquityCurveChartProps {
@@ -65,22 +66,27 @@ export function EquityCurveChart({ data, loading }: EquityCurveChartProps) {
         <ResponsiveContainer width="100%" height={300}>
           <AreaChart data={chartData}>
             <defs>
+              {/* SVG paint attributes cannot resolve CSS custom properties, so the
+                  palette comes from lib/utils/colors (same hex as the oklch tokens). */}
               <linearGradient id="equityGradient" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3} />
-                <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
+                <stop offset="5%" stopColor={CHART_GRADIENTS.positive[0]} stopOpacity={0.28} />
+                <stop offset="95%" stopColor={CHART_GRADIENTS.positive[1]} stopOpacity={0} />
               </linearGradient>
             </defs>
-            <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+            <CartesianGrid strokeDasharray="3 3" stroke={PALETTE.border} strokeOpacity={0.5} />
             <XAxis
               dataKey="index"
-              tick={{ fontSize: 11 }}
-              className="text-muted-foreground"
+              tick={{ fontSize: 11, fill: PALETTE.mutedForeground }}
+              axisLine={{ stroke: PALETTE.border }}
+              tickLine={{ stroke: PALETTE.border }}
               tickFormatter={tickFormatter}
               interval={0}
             />
             <YAxis
-              tick={{ fontSize: 11 }}
-              className="text-muted-foreground"
+              tick={{ fontSize: 11, fill: PALETTE.mutedForeground }}
+              axisLine={{ stroke: PALETTE.border }}
+              tickLine={{ stroke: PALETTE.border }}
+              className="font-mono"
               tickFormatter={(v: number) => `$${v}`}
               domain={[minBalance - padding, maxBalance + padding]}
             />
@@ -91,15 +97,21 @@ export function EquityCurveChart({ data, loading }: EquityCurveChartProps) {
               ]}
               {...CHART_TOOLTIP_STYLE}
             />
-            <ReferenceLine y={chartData[0]?.balance ?? 0} stroke="#64748b" strokeDasharray="3 3" strokeOpacity={0.5} />
+            {/* Starting-balance baseline: neutral, subtle. */}
+            <ReferenceLine
+              y={chartData[0]?.balance ?? 0}
+              stroke={PALETTE.mutedForeground}
+              strokeOpacity={0.5}
+              strokeDasharray="3 3"
+            />
             <Area
               type="monotone"
               dataKey="balance"
-              stroke="#3b82f6"
+              stroke={PROFIT_COLOR}
               strokeWidth={2}
               fill="url(#equityGradient)"
               dot={false}
-              activeDot={{ r: 4, strokeWidth: 2 }}
+              activeDot={{ r: 4, strokeWidth: 2, fill: PROFIT_COLOR }}
             />
           </AreaChart>
         </ResponsiveContainer>
