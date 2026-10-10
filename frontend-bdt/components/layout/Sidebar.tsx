@@ -44,29 +44,28 @@ function SidebarContent({ onNavClick }: SidebarContentProps) {
   return (
     <div className="flex h-full flex-col bg-sidebar">
       {/* Logo */}
-      <div className="relative px-5 pb-6 pt-7">
+      <div className="px-5 pb-6 pt-7">
         <div className="flex items-center gap-3.5">
-          <div className="relative flex size-11 items-center justify-center rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 shadow-lg shadow-primary/10">
+          <div className="flex size-11 items-center justify-center rounded-xl border border-border bg-card">
             <Compass className="size-5.5 text-primary" />
-            <div className="absolute -inset-px rounded-2xl bg-gradient-to-br from-primary/20 to-transparent opacity-0 transition-opacity group-hover:opacity-100" />
           </div>
           <div className="flex flex-col">
             <span className="text-[15px] font-bold tracking-tight text-foreground">
               La Brújula
             </span>
-            <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-primary/60">
+            <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
               del Trader
             </span>
           </div>
         </div>
       </div>
 
-      {/* Divider with gradient */}
-      <div className="mx-4 h-px bg-gradient-to-r from-transparent via-border to-transparent" />
+      {/* Divider */}
+      <div className="mx-4 h-px bg-border/60" />
 
       {/* Section label */}
       <div className="px-5 pt-5 pb-2">
-        <span className="text-[10px] font-semibold uppercase tracking-[0.15em] text-muted-foreground/50">
+        <span className="text-[10px] font-semibold uppercase tracking-[0.15em] text-muted-foreground">
           Navigation
         </span>
       </div>
@@ -81,24 +80,22 @@ function SidebarContent({ onNavClick }: SidebarContentProps) {
               href={item.href}
               onClick={onNavClick}
               className={cn(
-                "group relative flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-sm font-medium transition-all duration-200",
+                "group relative flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-sm font-medium transition-colors duration-150",
                 isActive
-                  ? "bg-gradient-to-r from-primary/15 to-primary/5 text-primary shadow-md shadow-primary/5"
-                  : "text-muted-foreground hover:bg-accent hover:text-foreground",
+                  ? "bg-primary/10 text-primary"
+                  : "text-muted-foreground hover:bg-elevated/60 hover:text-foreground",
               )}
             >
               {/* Active indicator bar */}
               {isActive && (
-                <div className="absolute left-0 top-1/2 -translate-y-1/2 rounded-r-full bg-primary shadow-sm shadow-primary/30">
-                  <div className="h-5 w-[3px] rounded-r-full bg-primary" />
-                </div>
+                <div className="absolute left-0 top-1/2 h-5 w-[3px] -translate-y-1/2 rounded-r-full bg-primary" />
               )}
 
               <item.icon
                 className={cn(
-                  "size-4 transition-all duration-200",
+                  "size-4 transition-colors duration-150",
                   isActive
-                    ? "text-primary drop-shadow-[0_0_6px_oklch(0.65_0.26_265/0.4)]"
+                    ? "text-primary"
                     : "text-muted-foreground group-hover:text-foreground",
                 )}
               />
@@ -117,19 +114,15 @@ function SidebarContent({ onNavClick }: SidebarContentProps) {
 
       {/* Bottom status card */}
       <div className="px-3 pb-4">
-        <div className="rounded-xl bg-gradient-to-br from-primary/8 to-transparent p-4 ring-1 ring-primary/10">
-          <div className="flex items-center gap-2.5">
-            <div className="flex size-8 items-center justify-center rounded-lg bg-primary/10">
-              <Zap className="size-4 text-primary" />
-            </div>
-            <div>
-              <p className="text-xs font-semibold text-foreground/90">
-                XAUUSD Analytics
-              </p>
-              <p className="text-[10px] text-muted-foreground/60">
-                v1.0 · MVP
-              </p>
-            </div>
+        <div className="flex items-center gap-2.5 rounded-lg border border-border/50 bg-card/40 px-3 py-2.5">
+          <Zap className="size-4 shrink-0 text-muted-foreground" />
+          <div className="min-w-0">
+            <p className="truncate text-xs font-medium text-muted-foreground">
+              XAUUSD Analytics
+            </p>
+            <p className="num-tabular text-[10px] text-muted-foreground/70">
+              v1.0 · MVP
+            </p>
           </div>
         </div>
       </div>
@@ -141,7 +134,7 @@ export function Sidebar() {
   return (
     <>
       {/* Desktop sidebar */}
-      <aside className="hidden lg:flex lg:w-64 lg:flex-col lg:border-r lg:border-border/40 lg:bg-sidebar">
+      <aside className="hidden lg:flex lg:w-64 lg:flex-col lg:border-r lg:border-border lg:bg-sidebar">
         <SidebarContent />
       </aside>
     </>

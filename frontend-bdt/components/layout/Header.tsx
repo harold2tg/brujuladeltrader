@@ -48,23 +48,23 @@ export function Header() {
   };
 
   return (
-    <header className="relative flex h-16 items-center justify-between border-b border-border/40 bg-background/60 px-4 backdrop-blur-2xl lg:px-6">
-      {/* Subtle top gradient line */}
-      <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
-
+    <header className="relative flex h-16 items-center justify-between border-b border-border bg-background/80 px-4 backdrop-blur-md lg:px-6">
       {/* Left: hamburger + mobile sheet */}
       <div className="flex items-center gap-2">
         <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
           <Button
             variant="ghost"
             size="icon-sm"
-            className="lg:hidden"
+            className="text-muted-foreground transition-colors duration-150 hover:text-foreground lg:hidden"
             onClick={() => setSidebarOpen(true)}
           >
             <Menu className="size-5" />
             <span className="sr-only">{t("common.openMenu")}</span>
           </Button>
-          <SheetContent side="left" className="w-64 border-r-border/40 p-0">
+          <SheetContent
+            side="left"
+            className="w-64 border-r border-border bg-sidebar p-0 text-sidebar-foreground"
+          >
             <SheetTitle className="sr-only">
               {t("nav.dashboard")}
             </SheetTitle>
@@ -78,29 +78,29 @@ export function Header() {
         <LanguageSwitcher />
 
         {/* Separator */}
-        <div className="h-5 w-px bg-border/40" />
+        <div className="h-5 w-px bg-border" />
 
         <DropdownMenu>
           <DropdownMenuTrigger
             render={
-              <button className="group flex items-center gap-2.5 rounded-full outline-none transition-all duration-200 hover:ring-2 hover:ring-primary/20 focus-visible:ring-2 focus-visible:ring-primary" />
+              <button className="group flex items-center gap-2.5 rounded-full outline-none transition-colors duration-150 hover:ring-2 hover:ring-primary/30 focus-visible:ring-2 focus-visible:ring-primary" />
             }
           >
             <div className="relative">
-              <Avatar className="size-9 ring-2 ring-border/50 transition-all duration-200 group-hover:ring-primary/30">
-                <AvatarFallback className="bg-gradient-to-br from-primary/20 to-primary/5 text-xs font-bold text-primary">
+              <Avatar className="size-9 ring-2 ring-border transition-all duration-150 group-hover:ring-primary/40">
+                <AvatarFallback className="bg-elevated text-xs font-bold text-primary">
                   {initials}
                 </AvatarFallback>
               </Avatar>
               {/* Online indicator */}
-              <div className="absolute -bottom-0.5 -right-0.5 size-3 rounded-full border-2 border-background bg-emerald-400" />
+              <div className="absolute -bottom-0.5 -right-0.5 size-3 rounded-full border-2 border-background bg-primary" />
             </div>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" sideOffset={8} className="w-60 overflow-hidden">
             <DropdownMenuGroup>
               <DropdownMenuLabel className="pb-3">
                 <div className="flex flex-col gap-1">
-                  <span className="text-sm font-bold">{user?.name}</span>
+                  <span className="text-sm font-semibold text-foreground">{user?.name}</span>
                   <span className="text-xs text-muted-foreground">
                     {user?.email}
                   </span>
