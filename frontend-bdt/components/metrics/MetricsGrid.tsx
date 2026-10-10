@@ -15,7 +15,7 @@ export function MetricsGrid({ metrics, loading }: MetricsGridProps) {
   const t = useTranslations("dashboard.metrics");
 
   return (
-    <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
+    <div className="grid grid-cols-2 gap-6 lg:grid-cols-4 min-w-0">
       <MetricCard
         title={t("winRate")}
         value={loading ? "—" : formatPercent(metrics?.win_rate ?? 0)}

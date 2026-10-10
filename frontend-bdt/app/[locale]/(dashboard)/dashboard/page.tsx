@@ -46,7 +46,7 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <PageHeader
         title={t("title")}
         description={t("latestDataSource", { name: dataSources[0]?.name })}
@@ -55,34 +55,24 @@ export default function DashboardPage() {
       {/* Quick diagnostic banner */}
       {metrics && (
         <div
-          className={`relative overflow-hidden rounded-xl border p-4 ${
+          className={`flex items-center gap-3 rounded-xl border border-border/60 bg-card p-4 ${
             metrics.net_pnl >= 0
-              ? "border-emerald-500/20 bg-gradient-to-r from-emerald-500/10 via-emerald-500/5 to-transparent"
-              : "border-red-500/20 bg-gradient-to-r from-red-500/10 via-red-500/5 to-transparent"
+              ? "border-l-2 border-l-primary"
+              : "border-l-2 border-l-destructive"
           }`}
         >
-          <div className="flex items-center gap-3">
-            <div
-              className={`flex size-10 items-center justify-center rounded-xl ${
-                metrics.net_pnl >= 0 ? "bg-emerald-500/15" : "bg-red-500/15"
+          <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-elevated ring-1 ring-foreground/5">
+            <Activity
+              className={`size-4.5 ${
+                metrics.net_pnl >= 0 ? "text-primary" : "text-destructive"
               }`}
-            >
-              <Activity
-                className={`size-5 ${
-                  metrics.net_pnl >= 0 ? "text-emerald-400" : "text-red-400"
-                }`}
-              />
-            </div>
-            <p
-              className={`text-sm font-semibold ${
-                metrics.net_pnl >= 0 ? "text-emerald-300" : "text-red-300"
-              }`}
-            >
-              {metrics.net_pnl >= 0
-                ? t("diagnostic.profitable")
-                : t("diagnostic.notProfitable")}
-            </p>
+            />
           </div>
+          <p className="text-sm font-medium text-foreground">
+            {metrics.net_pnl >= 0
+              ? t("diagnostic.profitable")
+              : t("diagnostic.notProfitable")}
+          </p>
         </div>
       )}
 
@@ -92,7 +82,7 @@ export default function DashboardPage() {
       {/* Charts */}
       <EquityCurveChart data={equityData?.data} loading={equityLoading} />
 
-      <div className="grid gap-6 lg:grid-cols-2">
+      <div className="grid min-w-0 gap-8 lg:grid-cols-2">
         <MonthlyPnlChart data={monthlyData?.data} loading={monthlyLoading} />
         <SessionPnlBarChart data={sessionData?.data} loading={sessionLoading} />
       </div>

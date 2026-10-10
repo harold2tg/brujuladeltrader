@@ -13,21 +13,19 @@ interface MetricCardProps {
   loading?: boolean;
 }
 
-const trendConfig: Record<Trend, { text: string; iconBg: string; glow: string }> = {
+// Semantic tokens only: var(--primary) for profit/positive, var(--destructive) for loss/negative.
+const trendConfig: Record<Trend, { text: string; iconText: string }> = {
   positive: {
-    text: "text-emerald-400",
-    iconBg: "bg-emerald-500/10",
-    glow: "shadow-emerald-500/5",
+    text: "text-primary",
+    iconText: "text-primary",
   },
   negative: {
-    text: "text-red-400",
-    iconBg: "bg-red-500/10",
-    glow: "shadow-red-500/5",
+    text: "text-destructive",
+    iconText: "text-destructive",
   },
   neutral: {
-    text: "text-muted-foreground",
-    iconBg: "bg-muted",
-    glow: "",
+    text: "text-foreground",
+    iconText: "text-muted-foreground",
   },
 };
 
@@ -40,13 +38,13 @@ export function MetricCard({
 }: MetricCardProps) {
   if (loading) {
     return (
-      <Card className="overflow-hidden border-border/40">
+      <Card className="border-border/40">
         <CardHeader className="flex flex-row items-center justify-between pb-2">
           <Skeleton className="h-4 w-24" />
-          <Skeleton className="size-10 rounded-xl" />
+          <Skeleton className="size-9 rounded-lg bg-elevated" />
         </CardHeader>
         <CardContent>
-          <Skeleton className="h-9 w-24" />
+          <Skeleton className="h-8 w-28" />
         </CardContent>
       </Card>
     );
@@ -55,29 +53,26 @@ export function MetricCard({
   const config = trendConfig[trend];
 
   return (
-    <Card className={cn("group relative overflow-hidden border-border/40 transition-all duration-300 hover:border-border/60 hover:shadow-lg", config.glow)}>
-      {/* Subtle gradient overlay on hover */}
-      <div className="absolute inset-0 bg-gradient-to-br from-primary/[0.02] to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
-
-      <CardHeader className="relative flex flex-row items-center justify-between pb-2">
-        <CardTitle className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/70">
+    <Card
+      className={cn(
+        "border-border/40 transition-[border-color,transform] duration-150 ease-out",
+        "hover:border-border hover:-translate-y-0.5",
+      )}
+    >
+      <CardHeader className="flex flex-row items-center justify-between pb-2">
+        <CardTitle className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
           {title}
         </CardTitle>
         {icon && (
-          <div
-            className={cn(
-              "flex size-10 items-center justify-center rounded-xl transition-all duration-300 group-hover:scale-105",
-              config.iconBg,
-            )}
-          >
-            <div className={cn("[&>svg]:size-5", config.text)}>{icon}</div>
+          <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-elevated ring-1 ring-foreground/5">
+            <div className={cn("[&>svg]:size-4.5", config.iconText)}>{icon}</div>
           </div>
         )}
       </CardHeader>
-      <CardContent className="relative">
+      <CardContent>
         <p
           className={cn(
-            "text-3xl font-bold tracking-tight",
+            "num-tabular font-mono text-3xl font-semibold tracking-tight",
             config.text,
           )}
         >
