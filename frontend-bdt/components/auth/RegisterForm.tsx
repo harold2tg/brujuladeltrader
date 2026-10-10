@@ -65,19 +65,19 @@ export function RegisterForm() {
   return (
     <div className="relative">
       {/* Card glow effect */}
-      <div className="absolute -inset-1 rounded-2xl bg-gradient-to-r from-primary/10 via-primary/5 to-primary/10 blur-xl opacity-50" />
+      <div className="absolute -inset-1 rounded-2xl bg-gradient-to-r from-primary/10 via-primary/5 to-primary/10 opacity-50 blur-xl" />
 
-      <Card className="relative overflow-hidden border-border/30 bg-card/80 shadow-2xl shadow-black/20 backdrop-blur-xl">
+      <Card className="relative overflow-hidden border-border bg-card shadow-2xl shadow-black/40">
         {/* Top gradient accent */}
-        <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/40 to-transparent" />
+        <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/50 to-transparent" />
 
-        <CardHeader className="text-center pb-6 pt-8">
+        <CardHeader className="pb-6 pt-8 text-center">
           <CardTitle className="text-xl font-bold">{t("title")}</CardTitle>
           <CardDescription className="pt-1">
             {t("hasAccount")}{" "}
             <Link
               href="/login"
-              className="font-semibold text-primary transition-colors hover:text-primary/80"
+              className="font-semibold text-primary transition-colors duration-150 hover:text-primary/80"
             >
               {t("login")}
             </Link>
@@ -87,13 +87,14 @@ export function RegisterForm() {
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
             {/* Name */}
             <div className="space-y-2">
-              <Label htmlFor="name" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/70">
+              <Label htmlFor="name" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                 {t("name")}
               </Label>
               <Input
                 id="name"
                 type="text"
                 placeholder="John Doe"
+                className="h-10 border-border bg-elevated/40 px-3 text-sm transition-colors duration-150 focus-visible:border-ring focus-visible:ring-primary/40"
                 disabled={isLoading}
                 aria-invalid={!!errors.name}
                 {...register("name")}
@@ -105,13 +106,14 @@ export function RegisterForm() {
 
             {/* Email */}
             <div className="space-y-2">
-              <Label htmlFor="email" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/70">
+              <Label htmlFor="email" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                 {t("email")}
               </Label>
               <Input
                 id="email"
                 type="email"
                 placeholder="you@example.com"
+                className="h-10 border-border bg-elevated/40 px-3 text-sm transition-colors duration-150 focus-visible:border-ring focus-visible:ring-primary/40"
                 disabled={isLoading}
                 aria-invalid={!!errors.email}
                 {...register("email")}
@@ -123,13 +125,14 @@ export function RegisterForm() {
 
             {/* Password */}
             <div className="space-y-2">
-              <Label htmlFor="password" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/70">
+              <Label htmlFor="password" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                 {t("password")}
               </Label>
               <Input
                 id="password"
                 type="password"
                 placeholder="••••••••"
+                className="h-10 border-border bg-elevated/40 px-3 text-sm transition-colors duration-150 focus-visible:border-ring focus-visible:ring-primary/40"
                 disabled={isLoading}
                 aria-invalid={!!errors.password}
                 {...register("password")}
@@ -144,7 +147,8 @@ export function RegisterForm() {
             {/* Submit */}
             <Button
               type="submit"
-              className="w-full shadow-lg shadow-primary/20 transition-all duration-200 hover:shadow-xl hover:shadow-primary/30"
+              size="lg"
+              className="h-10 w-full text-sm shadow-lg shadow-primary/20 transition-all duration-200 hover:shadow-xl hover:shadow-primary/30"
               disabled={isLoading}
             >
               {isLoading ? (
