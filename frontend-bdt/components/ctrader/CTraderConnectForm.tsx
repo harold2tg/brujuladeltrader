@@ -97,7 +97,7 @@ export function CTraderConnectForm() {
 
   if (isLoading) {
     return (
-      <Card className="border-border/40">
+      <Card className="ring-border">
         <CardContent className="flex items-center justify-center py-12">
           <Loader2 className="size-6 animate-spin text-muted-foreground" />
         </CardContent>
@@ -108,16 +108,16 @@ export function CTraderConnectForm() {
   // Connected state
   if (hasCredentials) {
     return (
-      <Card className="border-border/40">
+      <Card className="ring-primary/30">
         <CardHeader>
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="flex size-10 items-center justify-center rounded-xl bg-emerald-500/10">
-                <CheckCircle2 className="size-5 text-emerald-400" />
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex min-w-0 items-center gap-3">
+              <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 ring-1 ring-primary/20">
+                <CheckCircle2 className="size-5 text-primary" />
               </div>
-              <div>
+              <div className="min-w-0">
                 <CardTitle className="text-base">{t("connected")}</CardTitle>
-                <CardDescription>
+                <CardDescription className="truncate">
                   {credentials?.account_name && (
                     <span>{credentials.account_name}</span>
                   )}
@@ -135,6 +135,7 @@ export function CTraderConnectForm() {
             <Button
               variant="destructive"
               size="sm"
+              className="shrink-0"
               onClick={() => setShowDelete(true)}
             >
               <Trash2 className="size-4" />
@@ -158,10 +159,10 @@ export function CTraderConnectForm() {
 
   // Not connected — show one-click connect button
   return (
-    <Card className="border-border/40">
+    <Card className="ring-border">
       <CardHeader>
         <div className="flex items-center gap-3">
-          <div className="flex size-10 items-center justify-center rounded-xl bg-primary/10">
+          <div className="flex size-10 items-center justify-center rounded-xl bg-elevated ring-1 ring-border">
             <XCircle className="size-5 text-muted-foreground" />
           </div>
           <div>
@@ -174,7 +175,7 @@ export function CTraderConnectForm() {
         <Button
           onClick={handleConnect}
           disabled={authUrlMutation.isPending}
-          className="shadow-lg shadow-primary/20"
+          className="shadow-lg shadow-primary/25 hover:shadow-primary/35"
         >
           {authUrlMutation.isPending ? (
             <Loader2 className="size-4 animate-spin" />

@@ -60,13 +60,13 @@ export function CTraderSyncPanel() {
   }
 
   return (
-    <Card className="border-border/40">
+    <Card className="ring-border">
       <CardHeader>
         <div className="flex items-center gap-3">
-          <div className="flex size-10 items-center justify-center rounded-xl bg-primary/10">
+          <div className="flex size-10 items-center justify-center rounded-xl bg-primary/10 ring-1 ring-primary/20">
             <RefreshCw className="size-5 text-primary" />
           </div>
-          <div>
+          <div className="min-w-0">
             <CardTitle className="text-base">{t("title")}</CardTitle>
             <CardDescription>{t("description")}</CardDescription>
           </div>
@@ -110,7 +110,7 @@ export function CTraderSyncPanel() {
         <Button
           onClick={handleSync}
           disabled={!hasCredentials || startSync.isPending || isSyncing}
-          className="w-full shadow-lg shadow-primary/20"
+          className="w-full shadow-lg shadow-primary/25 hover:shadow-primary/35"
         >
           {startSync.isPending || isSyncing ? (
             <Loader2 className="size-4 animate-spin" />
@@ -124,31 +124,31 @@ export function CTraderSyncPanel() {
 
         {/* Sync status */}
         {syncStatus && (
-          <div className="rounded-xl bg-muted/30 p-4">
+          <div className="rounded-xl bg-elevated/60 p-4 ring-1 ring-border">
             <div className="flex items-center justify-between text-sm">
               <span className="text-muted-foreground">Status</span>
-              <span className="font-medium capitalize">{syncStatus.status}</span>
+              <span className="font-medium text-foreground capitalize">{syncStatus.status}</span>
             </div>
             {syncStatus.progress_pct !== undefined && syncStatus.progress_pct > 0 && (
               <div className="mt-2">
-                <div className="h-1.5 overflow-hidden rounded-full bg-muted">
+                <div className="h-1.5 overflow-hidden rounded-full bg-elevated ring-1 ring-border/60">
                   <div
-                    className="h-full bg-primary transition-all duration-500"
+                    className="h-full rounded-full bg-primary transition-all duration-500 ease-out"
                     style={{ width: `${syncStatus.progress_pct}%` }}
                   />
                 </div>
-                <p className="mt-1 text-right text-xs text-muted-foreground">
+                <p className="mt-1 text-right text-xs text-muted-foreground num-tabular font-mono">
                   {Math.round(syncStatus.progress_pct)}%
                 </p>
               </div>
             )}
             {syncStatus.trades_imported !== undefined && syncStatus.trades_imported > 0 && (
-              <p className="mt-2 text-sm text-emerald-400">
+              <p className="mt-2 text-sm text-primary num-tabular">
                 {t("successDetail", { count: syncStatus.trades_imported })}
               </p>
             )}
             {syncStatus.error && (
-              <p className="mt-2 text-sm text-red-400">{syncStatus.error}</p>
+              <p className="mt-2 text-sm text-destructive">{syncStatus.error}</p>
             )}
           </div>
         )}
