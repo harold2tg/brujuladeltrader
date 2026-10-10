@@ -6,16 +6,15 @@ export const metadata: Metadata = {
   description: "Plataforma de análisis estadístico para traders de XAUUSD",
 };
 
+/**
+ * Root layout only forwards metadata and global styles.
+ * The `<html>` / `<body>` shell lives in app/[locale]/layout.tsx so the
+ * document is rendered once, with the correct `lang` attribute.
+ */
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  return (
-    <html lang="es" className="dark" suppressHydrationWarning>
-      <body className="min-h-screen bg-background text-foreground antialiased">
-        {children}
-      </body>
-    </html>
-  );
+  return children;
 }
