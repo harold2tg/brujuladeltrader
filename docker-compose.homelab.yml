@@ -1,0 +1,110 @@
+# =============================================================================
+# La Brújula del Trader — Docker Compose para Homelab
+# =============================================================================
+# Uso: docker compose -f docker-compose.homelab.yml up -d
+#
+# Este compose está diseñado para correr en un homelab que ya tiene:
+# - PostgreSQL 16 corriendo como contenedor Docker
+# - Redis 7 corriendo como contenedor Docker
+# - Nginx Proxy Manager como reverse proxy
+# - Tailscale para acceso seguro
+#
+# NO incluye: db, redis, nginx, certbot (se usan los compartidos del homelab)
+# Solo incluye: api, worker, web
+# =============================================================================
+
+services:
+  # ──────────────────────────────────────────────
+  # API (FastAPI)
+  # ──────────────────────────────────────────────
+  api:
+    image: ghcr.io/${GITHUB_USER:-harold2tg}/brujula-api:${API_VERSION:-latest}
+    container_name: brujula_api
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      - APP_ENV=production
+      # Override para homelab: usar PostgreSQL y Redis del host
+      - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@host.docker.internal:5432/${POSTGRES_DB}
+      - DATABASE_URL_SYNC=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@host.docker.internal:5432/${POSTGRES_DB}
+      - REDIS_URL=redis://:${REDIS_PASSWORD}@host.docker.internal:6379/${REDIS_DB_NUMBER:-1}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    networks:
+      - brujula_net
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    depends_on:
+      redis:
+        condition: service_healthy
+
+  # ──────────────────────────────────────────────
+  # Worker (Celery)
+  # ──────────────────────────────────────────────
+  worker:
+    image: ghcr.io/${GITHUB_USER:-harold2tg}/brujula-api:${API_VERSION:-latest}
+    container_name: brujula_worker
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      - APP_ENV=production
+      - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@host.docker.internal:5432/${POSTGRES_DB}
+      - DATABASE_URL_SYNC=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@host.docker.internal:5432/${POSTGRES_DB}
+      - REDIS_URL=redis://:${REDIS_PASSWORD}@host.docker.internal:6379/${REDIS_DB_NUMBER:-1}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    command: celery -A app.worker worker --loglevel=warning --concurrency=2
+    networks:
+      - brujula_net
+    depends_on:
+      redis:
+        condition: service_healthy
+
+  # ──────────────────────────────────────────────
+  # Web (Next.js)
+  # ──────────────────────────────────────────────
+  web:
+    image: ghcr.io/${GITHUB_USER:-harold2tg}/brujula-web:${WEB_VERSION:-latest}
+    container_name: brujula_web
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-http://localhost:8000}
+      - NEXT_PUBLIC_DEFAULT_LOCALE=es
+    networks:
+      - brujula_net
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ──────────────────────────────────────────────
+  # Redis (healthcheck only — usa Redis compartido del homelab)
+  # ──────────────────────────────────────────────
+  # Este servicio es solo para el healthcheck de Redis
+  # No corre Redis propio, solo verifica que el Redis del host esté disponible
+  redis:
+    image: redis:7-alpine
+    container_name: brujula_redis_healthcheck
+    restart: "no"
+    entrypoint: ["sh", "-c", "redis-cli -h host.docker.internal -p 6379 -a ${REDIS_PASSWORD} ping && exit 0 || exit 1"]
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    networks:
+      - brujula_net
+    healthcheck:
+      test: ["CMD", "redis-cli", "-h", "host.docker.internal", "-p", "6379", "-a", "${REDIS_PASSWORD}", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+networks:
+  brujula_net:
+    driver: bridge

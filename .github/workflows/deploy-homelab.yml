@@ -1,0 +1,203 @@
+name: Deploy to Homelab
+
+on:
+  push:
+    branches: [main, developer]
+    paths:
+      - "Bakend-bdt/**"
+      - "frontend-bdt/**"
+      - ".github/workflows/deploy-homelab.yml"
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "Target environment"
+        required: true
+        default: "homelab"
+        type: choice
+        options:
+          - homelab
+      api_version:
+        description: "API image version (default: latest)"
+        required: false
+        default: "latest"
+      web_version:
+        description: "Web image version (default: latest)"
+        required: false
+        default: "latest"
+
+env:
+  REGISTRY: ghcr.io
+  API_IMAGE: ghcr.io/${{ github.repository_owner }}/brujula-api
+  WEB_IMAGE: ghcr.io/${{ github.repository_owner }}/brujula-web
+
+jobs:
+  # ──────────────────────────────────────────────
+  # Job 1: Build & Push API Image
+  # ──────────────────────────────────────────────
+  build-api:
+    name: Build & Push API
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.API_IMAGE }}
+          tags: |
+            type=ref,event=branch
+            type=sha,prefix={{branch}}-
+            type=raw,value=latest,enable={{is_default_branch}}
+
+      - name: Build and push API image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./Bakend-bdt
+          file: ./Bakend-bdt/docker/Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  # ──────────────────────────────────────────────
+  # Job 2: Build & Push Web Image
+  # ──────────────────────────────────────────────
+  build-web:
+    name: Build & Push Web
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.WEB_IMAGE }}
+          tags: |
+            type=ref,event=branch
+            type=sha,prefix={{branch}}-
+            type=raw,value=latest,enable={{is_default_branch}}
+
+      - name: Build and push Web image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./frontend-bdt
+          file: ./frontend-bdt/Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          build-args: |
+            NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL }}
+            NEXT_PUBLIC_DEFAULT_LOCALE=es
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  # ──────────────────────────────────────────────
+  # Job 3: Deploy to Homelab via Tailscale SSH
+  # ──────────────────────────────────────────────
+  deploy:
+    name: Deploy to Homelab
+    needs: [build-api, build-web]
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch'
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Connect to Tailscale
+        uses: tailscale/github-action@v2
+        with:
+          oauth-client-id: ${{ secrets.TAILSCALE_CLIENT_ID }}
+          oauth-secret: ${{ secrets.TAILSCALE_CLIENT_SECRET }}
+          tags: tag:ci-deployer
+
+      - name: Setup SSH key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.HOMELAB_SSH_KEY }}" > ~/.ssh/homelab_key
+          chmod 600 ~/.ssh/homelab_key
+          ssh-keyscan -H ${{ secrets.HOMELAB_TAILSCALE_IP }} >> ~/.ssh/known_hosts
+
+      - name: Deploy to Homelab
+        env:
+          HOMELAB_IP: ${{ secrets.HOMELAB_TAILSCALE_IP }}
+          API_VERSION: ${{ github.event.inputs.api_version || 'latest' }}
+          WEB_VERSION: ${{ github.event.inputs.web_version || 'latest' }}
+        run: |
+          ssh -i ~/.ssh/homelab_key ${{ secrets.HOMELAB_SSH_USER }}@$HOMELAB_IP << 'ENDSSH'
+            set -e
+            
+            # Ir al directorio de brujula
+            cd /data/brujula
+            
+            # Pull de imágenes
+            echo "📥 Pulling images..."
+            docker compose -f docker-compose.homelab.yml pull
+            
+            # Setear versiones
+            export API_VERSION=$API_VERSION
+            export WEB_VERSION=$WEB_VERSION
+            
+            # Restart de servicios
+            echo "🔄 Restarting services..."
+            docker compose -f docker-compose.homelab.yml up -d
+            
+            # Esperar healthchecks
+            echo "⏳ Waiting for healthchecks..."
+            sleep 10
+            
+            # Verificar estado
+            echo "✅ Service status:"
+            docker compose -f docker-compose.homelab.yml ps
+            
+            # Cleanup de imágenes antiguas
+            echo "🧹 Cleaning up old images..."
+            docker image prune -f
+            
+            echo "🎉 Deploy complete!"
+          ENDSSH
+
+      - name: Verify deployment
+        env:
+          HOMELAB_IP: ${{ secrets.HOMELAB_TAILSCALE_IP }}
+        run: |
+          ssh -i ~/.ssh/homelab_key ${{ secrets.HOMELAB_SSH_USER }}@$HOMELAB_IP << 'ENDSSH'
+            cd /data/brujula
+            
+            # Verificar health de API
+            echo "Checking API health..."
+            curl -f http://localhost:8000/health || exit 1
+            
+            # Verificar health de Web
+            echo "Checking Web health..."
+            curl -f http://localhost:3000 || exit 1
+            
+            echo "✅ All services healthy!"
+          ENDSSH

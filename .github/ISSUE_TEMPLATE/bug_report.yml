@@ -1,0 +1,147 @@
+name: "🐛 Bug Report"
+description: Report a bug to help us improve La Brújula del Trader
+title: "[BUG] "
+labels: ["bug"]
+assignees: []
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## 🐛 Bug Report
+        Thanks for taking the time to report a bug! Please fill in as much detail as possible.
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: Clearly describe the bug. What happens? When does it happen? What error message do you see?
+      placeholder: |
+        When I try to [action], the app [unexpected behavior].
+        Error message: "..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps-to-reproduce
+    attributes:
+      label: Steps to Reproduce
+      description: Provide detailed steps to reproduce the issue
+      placeholder: |
+        1. Go to '...'
+        2. Click on '...'
+        3. Scroll down to '...'
+        4. See error
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected-behavior
+    attributes:
+      label: Expected Behavior
+      description: What did you expect to happen?
+      placeholder: I expected the chart to load and display the selected timeframe...
+    validations:
+      required: true
+
+  - type: dropdown
+    id: platform
+    attributes:
+      label: Platform
+      description: Where did you encounter this bug?
+      options:
+        - Web (Desktop Browser)
+        - iOS (iPhone)
+        - iOS (iPad)
+        - Android (Phone)
+        - Android (Tablet)
+    validations:
+      required: true
+
+  - type: input
+    id: browser-device
+    attributes:
+      label: Browser / Device
+      description: Which browser or device? (e.g., Chrome 120, Safari 17, iPhone 15 Pro)
+      placeholder: "e.g., Chrome 120, iPhone 15 Pro, Samsung Galaxy S24"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: account-type
+    attributes:
+      label: Account Type
+      description: What type of account were you using?
+      options:
+        - Demo
+        - Live
+    validations:
+      required: true
+
+  - type: dropdown
+    id: plan
+    attributes:
+      label: Plan
+      description: What plan are you on?
+      options:
+        - Free
+        - Pro
+        - Premium
+    validations:
+      required: true
+
+  - type: dropdown
+    id: severity
+    attributes:
+      label: Severity
+      description: How severe is this bug?
+      options:
+        - "🔴 Critical — App is unusable / cannot trade"
+        - "🟠 High — Feature broken, no workaround"
+        - "🟡 Medium — Feature broken, workaround exists"
+        - "🟢 Low — Cosmetic / minor annoyance"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: frequency
+    attributes:
+      label: Frequency
+      description: How often does this happen?
+      options:
+        - Always (100%)
+        - Frequently (~50%)
+        - Intermittent (hard to reproduce)
+        - Happened once
+    validations:
+      required: true
+
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: Screenshots or Logs
+      description: Add screenshots, screen recordings, or error logs if possible
+      placeholder: |
+        Drag and drop images here, or paste logs.
+        
+        Tip: On mobile, you can record your screen to capture the issue.
+    validations:
+      required: false
+
+  - type: textarea
+    id: workaround
+    attributes:
+      label: Workaround
+      description: Is there a way to avoid this issue while it's being fixed?
+      placeholder: |
+        I can work around this by...
+        OR
+        No workaround found.
+    validations:
+      required: false
+
+  - type: markdown
+    attributes:
+      value: |
+        ---
+        *Thank you for reporting! We'll review this as soon as possible.*
