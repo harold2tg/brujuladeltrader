@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 📚 Documentation
+    url: https://brujula.app/docs
+    about: Check our documentation first — your question might already be answered
+  - name: 💬 Community Support
+    url: https://brujula.app/community
+    about: Ask questions and get help from the community
+  - name: 🐛 Security Issue
+    url: mailto:security@brujula.app
+    about: Report security vulnerabilities privately (do not create a public issue)
